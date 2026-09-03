@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../dates/presentation/date_format.dart';
 import '../application/wrapped_controller.dart';
 
 /// /wrapped — a swipeable "year in review". Each card is a full-bleed panel with
@@ -198,7 +199,7 @@ class _WrappedScreenState extends ConsumerState<WrappedScreen> {
             Text(l10n.wrappedFavCategory.toUpperCase(), style: _small),
             const SizedBox(height: RachaTokens.space4),
             Text(
-              topCategory.category,
+              categoryLabel(l10n, topCategory.category),
               style: _big,
               textAlign: TextAlign.center,
             ),
@@ -228,7 +229,7 @@ class _WrappedScreenState extends ConsumerState<WrappedScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: RachaTokens.space2),
               child: _RecapRow(
-                label: c.category,
+                label: categoryLabel(l10n, c.category),
                 value: l10n.summaryVisitsCount(c.visits),
               ),
             ),

@@ -36,3 +36,17 @@ IconData categoryIcon(String category) => switch (category) {
   'hotel' => Icons.hotel,
   _ => Icons.place,
 };
+
+/// The localized label for a place category code (audit F, medium: raw ids like
+/// "restaurant" / "other" were shown as copy on five screens).
+String categoryLabel(AppLocalizations l10n, String category) =>
+    switch (category) {
+      'restaurant' => l10n.categoryRestaurant,
+      'cafe' => l10n.categoryCafe,
+      'bar' => l10n.categoryBar,
+      'cinema' => l10n.categoryCinema,
+      'park' => l10n.categoryPark,
+      'museum' => l10n.categoryMuseum,
+      'hotel' => l10n.categoryHotel,
+      _ => l10n.categoryOther,
+    };

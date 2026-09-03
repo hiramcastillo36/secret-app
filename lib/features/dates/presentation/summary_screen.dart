@@ -164,7 +164,7 @@ class _CategoryBar extends StatelessWidget {
                       color: scheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: RachaTokens.space2),
-                    Text(stat.category),
+                    Text(categoryLabel(l10n, stat.category)),
                   ],
                 ),
                 Text(

@@ -13,6 +13,7 @@ import '../../common/osm_attribution.dart';
 import '../../common/section_label.dart';
 import '../application/dates.dart';
 import '../domain/models.dart';
+import 'date_format.dart';
 
 class DateDetailScreen extends ConsumerWidget {
   const DateDetailScreen({super.key, required this.dateId});
@@ -260,7 +261,7 @@ class _Loaded extends ConsumerWidget {
             children: [
               if (place != null)
                 Chip(
-                  label: Text(place.category),
+                  label: Text(categoryLabel(l10n, place.category)),
                   backgroundColor: scheme.primaryContainer,
                   side: BorderSide.none,
                   labelStyle: TextStyle(
