@@ -191,8 +191,16 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  int _thisMonthCount(Overview ov) =>
-      ov.datesByMonth.isEmpty ? 0 : ov.datesByMonth.last.count;
+  int _thisMonthCount(Overview ov) {
+    // Match the current month explicitly; the last array element is last month
+    // when nothing has been logged yet this month (audit F, low).
+    final now = DateTime.now();
+    final key = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    for (final m in ov.datesByMonth) {
+      if (m.month == key || m.month == now.month.toString()) return m.count;
+    }
+    return 0;
+  }
 }
 
 /// The one element allowed to shout: a plum hero with the animated week count,

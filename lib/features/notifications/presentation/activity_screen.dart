@@ -79,6 +79,19 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
         _items.addAll(page.items);
         _cursor = page.nextCursor;
       });
+    } catch (_) {
+      // Without this the failure was swallowed and "load more" just went
+      // quiet (audit F, low: finally with no catch). The cursor is kept so
+      // the next scroll / tap retries.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).commonSomethingWentWrong,
+            ),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loadingMore = false);
     }
