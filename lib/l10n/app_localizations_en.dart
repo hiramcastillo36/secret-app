@@ -27,6 +27,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonRetry => 'Retry';
 
   @override
+  String get commonGoHome => 'Go home';
+
+  @override
+  String get routeNotFound => 'We could not find that screen.';
+
+  @override
   String get a11yBack => 'Back';
 
   @override

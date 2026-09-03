@@ -27,6 +27,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonRetry => 'Reintentar';
 
   @override
+  String get commonGoHome => 'Ir al inicio';
+
+  @override
+  String get routeNotFound => 'No encontramos esa pantalla.';
+
+  @override
   String get a11yBack => 'Atrás';
 
   @override

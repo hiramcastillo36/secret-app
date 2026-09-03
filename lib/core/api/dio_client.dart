@@ -21,6 +21,9 @@ final dioProvider = Provider<Dio>((ref) {
       baseUrl: '${Env.apiBaseUrl.replaceFirst(RegExp(r'/+$'), '')}/v1',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
+      // Without this a stalled upload hangs forever; ApiException already maps
+      // sendTimeout, it just could never fire (audit F, medium).
+      sendTimeout: const Duration(seconds: 30),
       contentType: Headers.jsonContentType,
     ),
   );
@@ -45,7 +48,8 @@ const _publicPaths = <String>{
   '/auth/password/reset',
 };
 
-bool isPublicApiPath(String path) => _publicPaths.contains(path.split('?').first);
+bool isPublicApiPath(String path) =>
+    _publicPaths.contains(path.split('?').first);
 
 class _AuthInterceptor extends Interceptor {
   _AuthInterceptor(this._ref, this._dio, this._storage);

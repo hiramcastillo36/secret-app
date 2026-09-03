@@ -6,6 +6,8 @@
   "commonDisplayName": "Your name",
   "commonContinue": "Continue",
   "commonRetry": "Retry",
+  "commonGoHome": "Go home",
+  "routeNotFound": "We could not find that screen.",
   "a11yBack": "Back",
   "a11yCalendar": "Open calendar",
   "a11yNotifications": "Notifications",

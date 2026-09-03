@@ -56,7 +56,9 @@ class _PlacePickerSheetState extends ConsumerState<PlacePickerSheet> {
         final res = await ref
             .read(datesControllerProvider.notifier)
             .searchPlaces(q);
-        if (mounted) {
+        // Ignore a stale response for a query the user moved past (audit F,
+        // medium: no sequence guard).
+        if (mounted && q == _controller.text.trim()) {
           setState(() {
             _results = res.results;
             _loading = false;

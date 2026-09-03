@@ -62,14 +62,16 @@ class _PlaceSearchScreenState extends ConsumerState<PlaceSearchScreen> {
       final res = await ref
           .read(datesControllerProvider.notifier)
           .searchPlaces(q);
-      if (!mounted) return;
+      // Drop a slow response for a query the user has already moved past, so it
+      // can't overwrite fresher results (audit F, medium: no sequence guard).
+      if (!mounted || q != _controller.text.trim()) return;
       setState(() {
         _results = res.results;
         _error = null;
         _loading = false;
       });
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted || q != _controller.text.trim()) return;
       setState(() {
         _error = e.isNetwork
             ? AppLocalizations.of(context).dateNewOffline

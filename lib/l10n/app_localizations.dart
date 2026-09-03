@@ -134,6 +134,18 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get commonRetry;
 
+  /// No description provided for @commonGoHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go home'**
+  String get commonGoHome;
+
+  /// No description provided for @routeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not find that screen.'**
+  String get routeNotFound;
+
   /// No description provided for @a11yBack.
   ///
   /// In en, this message translates to:

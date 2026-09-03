@@ -55,7 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () => context.push('/login'),
+                  onPressed: () => context.go('/login'),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white.withValues(alpha: 0.7),
                   ),
@@ -142,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         children: [
                           _WhiteButton(
                             label: l10n.onboardingCreateAccount,
-                            onPressed: () => context.push('/register'),
+                            onPressed: () => context.go('/register'),
                           ),
                           const SizedBox(height: RachaTokens.space2),
                           OutlinedButton(
@@ -153,7 +153,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                               minimumSize: const Size.fromHeight(52),
                             ),
-                            onPressed: () => context.push('/login'),
+                            onPressed: () => context.go('/login'),
                             child: Text(l10n.onboardingSignIn),
                           ),
                         ],

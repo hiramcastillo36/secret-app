@@ -6,6 +6,8 @@
   "commonDisplayName": "Tu nombre",
   "commonContinue": "Continuar",
   "commonRetry": "Reintentar",
+  "commonGoHome": "Ir al inicio",
+  "routeNotFound": "No encontramos esa pantalla.",
   "a11yBack": "Atrás",
   "a11yCalendar": "Abrir calendario",
   "a11yNotifications": "Notificaciones",

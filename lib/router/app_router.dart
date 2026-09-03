@@ -1,8 +1,9 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/auth/session_controller.dart';
+import '../l10n/app_localizations.dart';
 import '../features/account/presentation/account_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -10,7 +11,6 @@ import '../features/auth/presentation/onboarding_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/auth/presentation/reset_password_screen.dart';
 import '../features/auth/presentation/verify_email_screen.dart';
-import '../features/common/placeholder_screen.dart';
 import '../features/notifications/presentation/activity_screen.dart';
 import '../features/notifications/presentation/notifications_screen.dart';
 import '../features/plans/domain/models.dart';
@@ -291,7 +291,50 @@ final routerProvider = Provider<GoRouter>((ref) {
             VerifyEmailScreen(token: s.uri.queryParameters['token']),
       ),
     ],
-    errorBuilder: (_, state) =>
-        PlaceholderScreen(title: 'Ruta no encontrada: ${state.uri}'),
+    errorBuilder: (context, state) => _RouteNotFound(uri: state.uri),
   );
 });
+
+/// The router's fallback for an unknown location: a localized message and a way
+/// back, instead of a hardcoded Spanish string with the raw URI (audit F,
+/// medium).
+class _RouteNotFound extends StatelessWidget {
+  const _RouteNotFound({required this.uri});
+
+  final Uri uri;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.explore_off_outlined,
+                size: 40,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.routeNotFound,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.go('/home'),
+                child: Text(l10n.commonGoHome),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

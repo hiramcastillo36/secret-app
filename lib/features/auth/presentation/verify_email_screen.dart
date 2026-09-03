@@ -148,7 +148,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               const SizedBox(height: RachaTokens.space5),
               if (_done)
                 FilledButton(
-                  onPressed: () => context.go('/home'),
+                  onPressed: () => context.go('/splash'),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
                   ),
@@ -181,7 +181,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 ),
                 const SizedBox(height: RachaTokens.space2),
                 TextButton(
-                  onPressed: () => context.go('/couple/setup'),
+                  onPressed: () => context.go('/splash'),
                   child: Text(l10n.verifyAlreadyDone),
                 ),
                 const SizedBox(height: RachaTokens.space4),

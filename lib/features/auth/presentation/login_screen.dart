@@ -45,7 +45,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         .read(authControllerProvider.notifier)
         .login(email: _email.text.trim(), password: _password.text);
     if (!mounted || session == null) return;
-    context.go('/splash');
+    // We already know from the login response whether there's a couple — no
+    // need to bounce through /splash and re-run bootstrap + GET /me.
+    context.go(session.coupleId != null ? '/home' : '/couple/setup');
   }
 
   @override
