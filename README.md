@@ -64,6 +64,4 @@ flutter test
 | Notifications (`/profile/notifications`): a switch per type with a real text example, reminder-hour dropdown, quiet-hours picker | **done** |
 | Home banners: unverified email, pending-deletion (strong) | **done** |
 | Push device registration | needs a Firebase project (`firebase_messaging` not wired) |
-| Account recovery / deletion, notifications screen | pending |
 
-Screens not yet built resolve to `PlaceholderScreen` so navigation already works.
