@@ -5,6 +5,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../application/notifications.dart';
 
 /// One switch per notification type with a real example of the text, plus the
@@ -39,7 +40,7 @@ class NotificationsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notifTitle)),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(rows: 6, rowHeight: 56),
         error: (_, __) => ErrorRetry(
           onRetry: () => ref.invalidate(notificationPreferencesProvider),
         ),

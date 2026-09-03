@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_banner.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../../common/field_tile.dart';
 import '../../common/step_bar.dart';
 import '../../couple/application/couple.dart';
@@ -144,7 +145,7 @@ class _DateDetailsScreenState extends ConsumerState<DateDetailsScreen> {
         bottom: StepBar(step: 2, total: 2, label: l10n.dateNewStep2),
       ),
       body: coupleAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(rows: 5, rowHeight: 64),
         error: (_, __) =>
             ErrorRetry(onRetry: () => ref.invalidate(coupleMeProvider)),
         data: (view) {

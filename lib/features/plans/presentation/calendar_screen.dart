@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../../common/section_label.dart';
 import '../application/plans.dart';
 import '../domain/models.dart';
@@ -95,7 +96,7 @@ class _MonthTab extends ConsumerWidget {
         _MonthHeader(month: month, onShift: onShiftMonth),
         Expanded(
           child: async.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const SkeletonList(rows: 4, rowHeight: 72),
             error: (_, __) => ErrorRetry(
               onRetry: () => ref.invalidate(calendarProvider(month)),
             ),
@@ -585,7 +586,7 @@ class _IdeasTab extends ConsumerWidget {
     final async = ref.watch(plansListProvider);
 
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonList(rows: 5, rowHeight: 72),
       error: (_, __) =>
           ErrorRetry(onRetry: () => ref.invalidate(plansListProvider)),
       data: (list) {

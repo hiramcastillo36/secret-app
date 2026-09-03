@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
@@ -25,7 +26,7 @@ class PlaceDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(rows: 4, rowHeight: 88),
         error: (_, __) => ErrorRetry(
           onRetry: () => ref.invalidate(placeDetailProvider(placeId)),
         ),

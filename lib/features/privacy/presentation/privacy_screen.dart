@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../application/privacy.dart';
 
 /// /profile/privacy — the handful of switches that change what the app shares,
@@ -40,7 +41,7 @@ class PrivacyScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.privacyTitle)),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(rows: 5, rowHeight: 56),
         error: (_, __) =>
             ErrorRetry(onRetry: () => ref.invalidate(privacySettingsProvider)),
         data: (s) => ListView(

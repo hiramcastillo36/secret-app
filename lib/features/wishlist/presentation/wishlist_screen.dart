@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/empty_state.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../../dates/presentation/date_format.dart';
 import '../../plans/domain/models.dart';
 import '../application/wishlist.dart';
@@ -58,7 +59,7 @@ class WishlistScreen extends ConsumerWidget {
           child: const Icon(Icons.add),
         ),
         body: async.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SkeletonList(),
           error: (_, __) =>
               ErrorRetry(onRetry: () => ref.invalidate(wishlistProvider)),
           data: (list) => TabBarView(

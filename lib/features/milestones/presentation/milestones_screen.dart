@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../application/milestones_controller.dart';
 import '../domain/models.dart';
 
@@ -21,7 +22,7 @@ class MilestonesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.milestonesTitle)),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(rows: 5, rowHeight: 76),
         error: (_, __) =>
             ErrorRetry(onRetry: () => ref.invalidate(milestonesProvider)),
         data: (board) {

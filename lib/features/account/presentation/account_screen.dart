@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../auth/application/auth.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../../common/settings_group.dart';
 import '../../common/status_pill.dart';
 import '../../profile/presentation/language_screen.dart';
@@ -25,7 +26,7 @@ class AccountScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.accountTitle)),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(rows: 5, rowHeight: 56),
         error: (_, __) => ErrorRetry(onRetry: () => ref.invalidate(meProvider)),
         data: (me) {
           final user = me.user;

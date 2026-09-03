@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../../dates/application/dates.dart';
 import '../application/protect.dart';
 
@@ -29,7 +30,7 @@ class ProtectScreen extends ConsumerWidget {
           await ref.read(protectHubProvider.future);
         },
         child: hub.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SkeletonList(rows: 4, rowHeight: 96),
           error: (_, __) => ListView(
             children: [
               const SizedBox(height: 120),
