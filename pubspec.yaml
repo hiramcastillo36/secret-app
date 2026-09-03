@@ -35,6 +35,7 @@ dependencies:
 
   # i18n formatting
   intl: ^0.20.2
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:

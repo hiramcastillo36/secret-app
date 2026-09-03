@@ -45,6 +45,16 @@ class CoupleController extends AutoDisposeNotifier<AsyncValue<Object?>> {
   void clearError() {
     if (state.hasError) state = const AsyncValue.data(null);
   }
+
+  /// Change the couple name and/or timezone from settings (audit F, low: the
+  /// zone was set once at creation and never editable). Throws [ApiException]
+  /// on failure so the caller can surface it.
+  Future<void> updateSettings({String? name, String? timezone}) async {
+    await ref
+        .read(coupleRepositoryProvider)
+        .updateSettings(name: name, timezone: timezone);
+    ref.invalidate(coupleMeProvider);
+  }
 }
 
 final coupleControllerProvider =

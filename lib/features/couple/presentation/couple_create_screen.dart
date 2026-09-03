@@ -2,32 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/time/timezones.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_banner.dart';
 import '../../common/field_tile.dart';
 import '../application/couple_controller.dart';
 import 'couple_error.dart';
-
-/// A short curated list of IANA zones. The couple's zone can be changed later
-/// from settings; the important thing is that it is a real zone.
-const _timezones = <String>[
-  'America/Mexico_City',
-  'America/Tijuana',
-  'America/Monterrey',
-  'America/Bogota',
-  'America/Lima',
-  'America/Santiago',
-  'America/Argentina/Buenos_Aires',
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'America/Sao_Paulo',
-  'Europe/Madrid',
-  'Europe/London',
-  'UTC',
-];
 
 class CoupleCreateScreen extends ConsumerStatefulWidget {
   const CoupleCreateScreen({super.key});
@@ -39,12 +20,17 @@ class CoupleCreateScreen extends ConsumerStatefulWidget {
 class _CoupleCreateScreenState extends ConsumerState<CoupleCreateScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
-  String _timezone = _timezones.first;
+  String _timezone = kCommonTimezones.first;
   bool _submitted = false;
 
   @override
   void initState() {
     super.initState();
+    // Default to the device's own zone instead of a fixed first item (audit F,
+    // low).
+    deviceTimezone().then((tz) {
+      if (mounted) setState(() => _timezone = tz);
+    });
     // Drop any error left over from the join screen — they share the
     // controller (audit F-H11).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -103,13 +89,14 @@ class _CoupleCreateScreenState extends ConsumerState<CoupleCreateScreen> {
                       ),
                       const SizedBox(height: RachaTokens.space4),
                       DropdownButtonFormField<String>(
+                        key: ValueKey(_timezone),
                         initialValue: _timezone,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: l10n.coupleCreateTimezoneLabel,
                         ),
                         items: [
-                          for (final tz in _timezones)
+                          for (final tz in timezoneOptions(_timezone))
                             DropdownMenuItem(value: tz, child: Text(tz)),
                         ],
                         onChanged: loading

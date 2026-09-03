@@ -47,6 +47,25 @@ class CoupleRepository {
       throw ApiException.fromDio(e);
     }
   }
+
+  /// PATCH /couples/me — change the couple name and/or its IANA timezone
+  /// (the server recalculates the streak against the new week boundaries).
+  Future<Couple> updateSettings({String? name, String? timezone}) async {
+    try {
+      final res = await _dio.patch<Map<String, dynamic>>(
+        '/couples/me',
+        data: {
+          if (name != null && name.isNotEmpty) 'name': name,
+          if (timezone != null && timezone.isNotEmpty) 'timezone': timezone,
+        },
+      );
+      return Couple.fromJson(
+        (res.data!['couple'] as Map).cast<String, dynamic>(),
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
 }
 
 final coupleRepositoryProvider = Provider<CoupleRepository>((ref) {

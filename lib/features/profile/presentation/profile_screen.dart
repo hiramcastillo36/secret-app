@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/api_exception.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/i18n/locale_controller.dart';
 import '../../../core/storage/token_storage.dart';
+import '../../../core/time/timezones.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../auth/application/auth.dart';
@@ -186,6 +188,13 @@ class ProfileScreen extends ConsumerWidget {
                         _InfoRow(
                           label: l10n.profileTimezone,
                           value: coupleView?.couple.timezone ?? '—',
+                          onTap: coupleView == null
+                              ? null
+                              : () => _pickTimezone(
+                                  context,
+                                  ref,
+                                  coupleView.couple.timezone,
+                                ),
                         ),
                         if (coupleView?.couple.inviteCode != null)
                           _InviteRow(code: coupleView!.couple.inviteCode!),
@@ -476,40 +485,119 @@ class _HeaderStat extends StatelessWidget {
   }
 }
 
+/// Opens a picker for the couple's IANA timezone and patches it (audit F, low:
+/// the zone was fixed at creation and profile showed it read-only). The server
+/// recalculates the streak against the new week boundaries.
+Future<void> _pickTimezone(
+  BuildContext context,
+  WidgetRef ref,
+  String current,
+) async {
+  final l10n = AppLocalizations.of(context);
+  final picked = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (context) => SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(RachaTokens.space4),
+              child: Text(
+                l10n.profileTimezone,
+                style: const TextStyle(
+                  fontSize: RachaType.headline,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final tz in timezoneOptions(current))
+                    ListTile(
+                      title: Text(tz),
+                      trailing: tz == current ? const Icon(Icons.check) : null,
+                      onTap: () => Navigator.pop(context, tz),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  if (picked == null || picked == current || !context.mounted) return;
+  try {
+    await ref
+        .read(coupleControllerProvider.notifier)
+        .updateSettings(timezone: picked);
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.notifSaved)));
+    }
+  } on ApiException catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+}
+
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
+  const _InfoRow({required this.label, required this.value, this.onTap});
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
+    final body = Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: RachaTokens.space4,
         vertical: RachaTokens.space3,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: RachaType.callout,
-              fontWeight: FontWeight.w600,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: RachaType.callout,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: RachaType.caption,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              color: scheme.onSurfaceVariant,
-              fontSize: RachaType.caption,
-            ),
-          ),
+          if (onTap != null)
+            Icon(Icons.edit_outlined, size: 18, color: scheme.onSurfaceVariant),
         ],
       ),
     );
+    if (onTap == null) return body;
+    return InkWell(onTap: onTap, child: body);
   }
 }
 
