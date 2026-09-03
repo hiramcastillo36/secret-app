@@ -16,6 +16,7 @@ import '../../common/settings_group.dart';
 import '../../couple/application/couple.dart';
 import '../../couple/domain/models.dart';
 import '../../dates/application/dates.dart';
+import '../../dates/presentation/date_format.dart';
 import '../../dates/domain/models.dart';
 import '../../privacy/application/privacy.dart';
 import 'language_screen.dart';
@@ -187,7 +188,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         _InfoRow(
                           label: l10n.profileTimezone,
-                          value: coupleView?.couple.timezone ?? '—',
+                          value: coupleView?.couple.timezone ?? 'â',
                           onTap: coupleView == null
                               ? null
                               : () => _pickTimezone(
@@ -424,7 +425,14 @@ class _Header extends StatelessWidget {
                     label: l10n.profileStatRecord,
                   ),
                   _HeaderStat(
-                    value: _shortMonth(overview.bestMonth),
+                    value:
+                        overview.bestMonth == null ||
+                            overview.bestMonth!.isEmpty
+                        ? '—'
+                        : monthLabel(
+                            overview.bestMonth!,
+                            Localizations.localeOf(context).toLanguageTag(),
+                          ),
                     label: l10n.profileStatBestMonth,
                   ),
                 ],
@@ -434,13 +442,6 @@ class _Header extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _shortMonth(String? bestMonth) {
-    if (bestMonth == null || bestMonth.isEmpty) return '—';
-    // "2026-03" -> "03"; a plain name -> first 3 letters.
-    if (bestMonth.contains('-')) return bestMonth.split('-').last;
-    return bestMonth.length <= 3 ? bestMonth : bestMonth.substring(0, 3);
   }
 }
 
@@ -720,9 +721,10 @@ class _MonthBars extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      months[i].month.length >= 7
-                          ? months[i].month.substring(5)
-                          : months[i].month,
+                      monthLabel(
+                        months[i].month,
+                        Localizations.localeOf(context).toLanguageTag(),
+                      ),
                       style: const TextStyle(fontSize: RachaType.micro),
                     ),
                   ],

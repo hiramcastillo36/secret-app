@@ -37,6 +37,19 @@ IconData categoryIcon(String category) => switch (category) {
   _ => Icons.place,
 };
 
+/// A localized month name from a `"YYYY-MM"` key (or a bare `"MM"`), so the
+/// profile and Wrapped stop showing "2026-03" / "03" (audit F, medium).
+String monthLabel(String key, String locale, {bool short = true}) {
+  final parts = key.split('-');
+  final int? month = parts.length >= 2
+      ? int.tryParse(parts[1])
+      : int.tryParse(parts[0]);
+  if (month == null || month < 1 || month > 12) return key;
+  final int year = parts.length >= 2 ? (int.tryParse(parts[0]) ?? 2000) : 2000;
+  final d = DateTime(year, month);
+  return (short ? DateFormat.MMM(locale) : DateFormat.yMMMM(locale)).format(d);
+}
+
 /// The localized label for a place category code (audit F, medium: raw ids like
 /// "restaurant" / "other" were shown as copy on five screens).
 String categoryLabel(AppLocalizations l10n, String category) =>

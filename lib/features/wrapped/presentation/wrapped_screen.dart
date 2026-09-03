@@ -216,7 +216,14 @@ class _WrappedScreenState extends ConsumerState<WrappedScreen> {
           children: [
             Text(l10n.wrappedBestMonth.toUpperCase(), style: _small),
             const SizedBox(height: RachaTokens.space4),
-            Text(ov.bestMonth!, style: _big),
+            Text(
+              monthLabel(
+                ov.bestMonth!,
+                Localizations.localeOf(context).toLanguageTag(),
+                short: false,
+              ),
+              style: _big,
+            ),
             const SizedBox(height: RachaTokens.space6),
             _MonthBars(months: ov.datesByMonth),
           ],
