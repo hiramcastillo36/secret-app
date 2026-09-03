@@ -344,6 +344,7 @@
   "wishlistMarkDone": "Marcar hecho",
   "wishlistReopen": "Reabrir",
   "wishlistDelete": "Borrar",
+  "wishlistAdd": "Agregar deseo",
   "wishlistDeletePlanned": "Este deseo ya está planificado. ¿Borrar de todos modos?",
   "wishlistDeleteConfirm": "¿Borrar este deseo de la lista?",
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/empty_state.dart';
 import '../../common/error_retry.dart';
 import '../../dates/presentation/date_format.dart';
 import '../../plans/domain/models.dart';
@@ -87,11 +88,14 @@ class _WishTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     if (items.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(RachaTokens.space6),
-          child: Text(l10n.wishlistEmpty, textAlign: TextAlign.center),
-        ),
+      return EmptyState(
+        icon: Icons.favorite_border,
+        text: l10n.wishlistEmpty,
+        actionLabel: l10n.wishlistAdd,
+        onAction: () async {
+          await context.push('/wishlist/new');
+          ref.invalidate(wishlistProvider);
+        },
       );
     }
     return ListView.builder(

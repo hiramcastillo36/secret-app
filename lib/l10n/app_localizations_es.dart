@@ -1005,6 +1005,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get wishlistDelete => 'Borrar';
 
   @override
+  String get wishlistAdd => 'Agregar deseo';
+
+  @override
   String get wishlistDeletePlanned =>
       'Este deseo ya está planificado. ¿Borrar de todos modos?';
 

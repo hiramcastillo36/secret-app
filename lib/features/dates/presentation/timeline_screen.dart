@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/format/money.dart';
 import '../../../theme/tokens.dart';
+import '../../common/empty_state.dart';
 import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
@@ -172,14 +173,15 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             ? ListView(
                 children: [
                   const SizedBox(height: RachaTokens.space7),
-                  Center(
-                    child: Text(
-                      _query.isEmpty
-                          ? l10n.timelineEmpty
-                          : l10n.timelineNoMatch,
-                    ),
-                  ),
-                  if (_query.isNotEmpty)
+                  if (_query.isEmpty)
+                    EmptyState(
+                      icon: Icons.favorite_border,
+                      text: l10n.timelineEmpty,
+                      actionLabel: l10n.homeLogDate,
+                      onAction: () => context.push('/dates/new'),
+                    )
+                  else ...[
+                    Center(child: Text(l10n.timelineNoMatch)),
                     Center(
                       child: TextButton(
                         onPressed: () {
@@ -189,6 +191,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                         child: Text(l10n.timelineClearSearch),
                       ),
                     ),
+                  ],
                 ],
               )
             : ListView.builder(

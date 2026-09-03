@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/empty_state.dart';
 import '../../common/error_retry.dart';
 import '../../dates/presentation/date_format.dart';
 import '../../plans/domain/models.dart';
@@ -56,14 +57,11 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
               ),
               data: (list) {
                 if (list.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(RachaTokens.space6),
-                      child: Text(
-                        l10n.suggestionsEmpty,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                  return EmptyState(
+                    icon: Icons.lightbulb_outline,
+                    text: l10n.suggestionsEmpty,
+                    actionLabel: l10n.homeLogDate,
+                    onAction: () => context.push('/dates/new'),
                   );
                 }
                 final scheme = Theme.of(context).colorScheme;

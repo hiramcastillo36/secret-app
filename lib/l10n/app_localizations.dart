@@ -1898,6 +1898,12 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get wishlistDelete;
 
+  /// No description provided for @wishlistAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a wish'**
+  String get wishlistAdd;
+
   /// No description provided for @wishlistDeletePlanned.
   ///
   /// In en, this message translates to:
