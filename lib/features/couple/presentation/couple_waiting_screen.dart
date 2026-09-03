@@ -20,21 +20,71 @@ class CoupleWaitingScreen extends ConsumerStatefulWidget {
       _CoupleWaitingScreenState();
 }
 
-class _CoupleWaitingScreenState extends ConsumerState<CoupleWaitingScreen> {
+class _CoupleWaitingScreenState extends ConsumerState<CoupleWaitingScreen>
+    with WidgetsBindingObserver {
   Timer? _poll;
+  int _polls = 0;
+  bool _stalled = false;
+
+  // ~15 minutes at the capped 30s interval, then it stops and offers a manual
+  // check (audit F, medium: it polled every 4s forever, no backoff, no cap and
+  // kept going in the background).
+  static const _maxPolls = 40;
 
   @override
   void initState() {
     super.initState();
-    _poll = Timer.periodic(const Duration(seconds: 4), (_) {
-      ref.invalidate(coupleMeProvider);
-    });
+    WidgetsBinding.instance.addObserver(this);
+    _schedule();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _polls = 0;
+      _stalled = false;
+      ref.invalidate(coupleMeProvider);
+      _schedule();
+    } else {
+      _poll?.cancel();
+      _poll = null;
+    }
+  }
+
+  Duration _interval() {
+    if (_polls < 2) return const Duration(seconds: 4);
+    if (_polls < 4) return const Duration(seconds: 8);
+    if (_polls < 8) return const Duration(seconds: 15);
+    return const Duration(seconds: 30);
+  }
+
+  void _schedule() {
+    _poll?.cancel();
+    if (_polls >= _maxPolls) {
+      if (mounted) setState(() => _stalled = true);
+      return;
+    }
+    _poll = Timer(_interval(), () {
+      _polls++;
+      ref.invalidate(coupleMeProvider);
+      _schedule();
+    });
+  }
+
+  void _resumePolling() {
+    setState(() {
+      _polls = 0;
+      _stalled = false;
+    });
+    ref.invalidate(coupleMeProvider);
+    _schedule();
   }
 
   void _copy(String text, String toast) {
@@ -52,6 +102,7 @@ class _CoupleWaitingScreenState extends ConsumerState<CoupleWaitingScreen> {
       final view = next.valueOrNull;
       if (view != null && view.couple.isActive && mounted) {
         _poll?.cancel();
+        _poll = null;
         context.go('/home');
       }
     });
@@ -224,24 +275,31 @@ class _CoupleWaitingScreenState extends ConsumerState<CoupleWaitingScreen> {
                       ],
                     ),
                     const SizedBox(height: RachaTokens.space6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        const SizedBox(width: RachaTokens.space2),
-                        Text(
-                          l10n.coupleWaitingPolling,
-                          style: TextStyle(
-                            color: scheme.onSurfaceVariant,
-                            fontSize: RachaType.caption,
+                    if (_stalled)
+                      TextButton.icon(
+                        onPressed: _resumePolling,
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: Text(l10n.commonRetry),
+                      )
+                    else
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: RachaTokens.space2),
+                          Text(
+                            l10n.coupleWaitingPolling,
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: RachaType.caption,
+                            ),
+                          ),
+                        ],
+                      ),
                     const SizedBox(height: RachaTokens.space6),
                   ],
                 ),

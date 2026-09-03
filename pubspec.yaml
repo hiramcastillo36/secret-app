@@ -34,7 +34,7 @@ dependencies:
   url_launcher: ^6.3.0
 
   # i18n formatting
-  intl: any
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
