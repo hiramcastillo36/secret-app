@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../l10n/app_localizations.dart';
 import '../../../core/format/money.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
 import '../../common/osm_attribution.dart';

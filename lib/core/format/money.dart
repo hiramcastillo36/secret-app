@@ -8,8 +8,8 @@ import 'package:intl/intl.dart';
 /// (the exact per-currency subtotals the summary endpoints return).
 String formatMoney(Object? amount, String currency, {String? locale}) {
   final value = switch (amount) {
-    num n => n,
-    String s => num.tryParse(s) ?? 0,
+    final num n => n,
+    final String s => num.tryParse(s) ?? 0,
     _ => 0,
   };
   return NumberFormat.currency(

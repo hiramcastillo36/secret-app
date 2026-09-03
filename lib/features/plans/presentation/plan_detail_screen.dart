@@ -458,7 +458,7 @@ class _PlanMenu extends ConsumerWidget {
     try {
       await ref.read(plansControllerProvider.notifier).cancel(plan.id);
       if (context.mounted) {
-        Navigator.of(context).maybePop();
+        await Navigator.of(context).maybePop();
       }
     } on ApiException catch (e) {
       if (context.mounted) {

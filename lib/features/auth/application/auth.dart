@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/auth_repository.dart';
 
-export 'auth_controller.dart';
 export '../data/auth_repository.dart' show meProvider;
+export 'auth_controller.dart';
 
 /// Auth / account actions that are not the login-register form (that is
 /// [AuthController]). Presentation calls these instead of the repository; the

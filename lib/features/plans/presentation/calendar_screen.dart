@@ -6,8 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_retry.dart';
-import '../../common/skeleton.dart';
 import '../../common/section_label.dart';
+import '../../common/skeleton.dart';
 import '../application/plans.dart';
 import '../domain/models.dart';
 

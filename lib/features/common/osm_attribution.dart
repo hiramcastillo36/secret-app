@@ -22,10 +22,8 @@ class OsmAttribution extends StatelessWidget {
       attributions: [
         TextSourceAttribution(
           'OpenStreetMap contributors',
-          onTap: () => launchUrl(
-            _copyright,
-            mode: LaunchMode.externalApplication,
-          ),
+          onTap: () =>
+              launchUrl(_copyright, mode: LaunchMode.externalApplication),
         ),
       ],
     );

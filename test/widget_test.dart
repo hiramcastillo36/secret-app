@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:racha/l10n/app_localizations.dart';
 import 'package:racha/features/auth/presentation/onboarding_screen.dart';
+import 'package:racha/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('onboarding shows the promise and the two actions', (

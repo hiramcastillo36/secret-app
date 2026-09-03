@@ -16,8 +16,8 @@ import '../../common/settings_group.dart';
 import '../../couple/application/couple.dart';
 import '../../couple/domain/models.dart';
 import '../../dates/application/dates.dart';
-import '../../dates/presentation/date_format.dart';
 import '../../dates/domain/models.dart';
+import '../../dates/presentation/date_format.dart';
 import '../../privacy/application/privacy.dart';
 import 'language_screen.dart';
 

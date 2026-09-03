@@ -9,8 +9,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../auth/application/auth.dart';
 import '../../common/error_retry.dart';
-import '../../common/skeleton.dart';
 import '../../common/settings_group.dart';
+import '../../common/skeleton.dart';
 import '../../common/status_pill.dart';
 import '../../profile/presentation/language_screen.dart';
 

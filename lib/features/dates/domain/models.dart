@@ -331,7 +331,8 @@ class StreakView {
   }
 
   factory StreakView.fromJson(Map<String, dynamic> j) {
-    final weeks = ((j['recent_weeks'] as List?) ?? const []).cast<Map>();
+    final weeks = ((j['recent_weeks'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
     return StreakView(
       currentStreak: (j['current_streak'] ?? 0) as int,
       longestStreak: (j['longest_streak'] ?? 0) as int,

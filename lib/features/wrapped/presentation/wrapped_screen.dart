@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/format/money.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/format/money.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../dates/presentation/date_format.dart';
