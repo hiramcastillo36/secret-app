@@ -6,7 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/field_tile.dart';
-import '../data/protect_repository.dart';
+import '../application/protect.dart';
 
 /// /streak/freeze/new — declare a travel/illness pause and freeze the streak for
 /// the weeks it spans. One free pause per calendar month.
@@ -52,22 +52,28 @@ class _FreezeFormScreenState extends ConsumerState<FreezeFormScreen> {
       _error = null;
     });
     try {
-      await ref.read(protectRepositoryProvider).createFreeze(
+      await ref
+          .read(protectControllerProvider.notifier)
+          .createFreeze(
             reason: _reason,
             startsWeekKey: isoWeekKey(_from!),
             endsWeekKey: isoWeekKey(to),
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.freezeDone)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.freezeDone)));
       context.pop();
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() => _error = switch (e.code) {
-              'freeze_quota_exceeded' => l10n.freezeErrorQuota,
-              'week_already_complete' => l10n.freezeErrorWeekComplete,
-              'freeze_past' => l10n.freezeErrorPast,
-              _ => e.message,
-            });
+        setState(
+          () => _error = switch (e.code) {
+            'freeze_quota_exceeded' => l10n.freezeErrorQuota,
+            'week_already_complete' => l10n.freezeErrorWeekComplete,
+            'freeze_past' => l10n.freezeErrorPast,
+            _ => e.message,
+          },
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -83,7 +89,8 @@ class _FreezeFormScreenState extends ConsumerState<FreezeFormScreen> {
         ? '—'
         : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
-    final quotaUsed = ref.watch(protectHubProvider).valueOrNull?.freezeQuotaUsed ?? false;
+    final quotaUsed =
+        ref.watch(protectHubProvider).valueOrNull?.freezeQuotaUsed ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -95,12 +102,15 @@ class _FreezeFormScreenState extends ConsumerState<FreezeFormScreen> {
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: RachaTokens.space3, vertical: 2),
+                    horizontal: RachaTokens.space3,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: (Theme.of(context).brightness == Brightness.dark
-                            ? RachaTokens.okDark
-                            : RachaTokens.okLight)
-                        .withValues(alpha: 0.15),
+                    color:
+                        (Theme.of(context).brightness == Brightness.dark
+                                ? RachaTokens.okDark
+                                : RachaTokens.okLight)
+                            .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(RachaTokens.radiusFull),
                   ),
                   child: Text(
@@ -125,18 +135,32 @@ class _FreezeFormScreenState extends ConsumerState<FreezeFormScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(RachaTokens.space5),
                 children: [
-                  Text(l10n.freezeReason,
-                      style: const TextStyle(
-                          fontSize: RachaType.callout, fontWeight: FontWeight.w600)),
+                  Text(
+                    l10n.freezeReason,
+                    style: const TextStyle(
+                      fontSize: RachaType.callout,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: RachaTokens.space2),
                   SegmentedButton<String>(
                     segments: [
-                      ButtonSegment(value: 'travel', label: Text(l10n.freezeReasonTravel)),
-                      ButtonSegment(value: 'illness', label: Text(l10n.freezeReasonIllness)),
-                      ButtonSegment(value: 'other', label: Text(l10n.freezeReasonOther)),
+                      ButtonSegment(
+                        value: 'travel',
+                        label: Text(l10n.freezeReasonTravel),
+                      ),
+                      ButtonSegment(
+                        value: 'illness',
+                        label: Text(l10n.freezeReasonIllness),
+                      ),
+                      ButtonSegment(
+                        value: 'other',
+                        label: Text(l10n.freezeReasonOther),
+                      ),
                     ],
                     selected: {_reason},
-                    onSelectionChanged: (s) => setState(() => _reason = s.first),
+                    onSelectionChanged: (s) =>
+                        setState(() => _reason = s.first),
                   ),
                   const SizedBox(height: RachaTokens.space5),
                   FieldTile(
@@ -156,12 +180,17 @@ class _FreezeFormScreenState extends ConsumerState<FreezeFormScreen> {
                   NoteBox(
                     tone: 'warning',
                     icon: Icons.ac_unit,
-                    child: Text.rich(TextSpan(children: [
+                    child: Text.rich(
                       TextSpan(
-                          text: '${l10n.freezeNoteTitle} ',
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                      TextSpan(text: l10n.freezeNoteBody),
-                    ])),
+                        children: [
+                          TextSpan(
+                            text: '${l10n.freezeNoteTitle} ',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          TextSpan(text: l10n.freezeNoteBody),
+                        ],
+                      ),
+                    ),
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: RachaTokens.space3),
@@ -175,14 +204,19 @@ class _FreezeFormScreenState extends ConsumerState<FreezeFormScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                      color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                    color: scheme.outlineVariant,
+                    width: RachaTokens.borderHairline,
+                  ),
                 ),
               ),
               child: FilledButton(
                 onPressed: (_from == null || _busy) ? null : _submit,
                 child: _busy
                     ? const SizedBox(
-                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(l10n.freezeSubmit),
               ),
             ),

@@ -87,14 +87,17 @@ class _CoupleCreateScreenState extends ConsumerState<CoupleCreateScreen> {
                           labelText: l10n.coupleCreateNameLabel,
                           helperText: l10n.coupleCreateNameHint,
                         ),
-                        validator: (v) =>
-                            (v ?? '').trim().isEmpty ? l10n.validationNameRequired : null,
+                        validator: (v) => (v ?? '').trim().isEmpty
+                            ? l10n.validationNameRequired
+                            : null,
                       ),
                       const SizedBox(height: RachaTokens.space4),
                       DropdownButtonFormField<String>(
                         initialValue: _timezone,
                         isExpanded: true,
-                        decoration: InputDecoration(labelText: l10n.coupleCreateTimezoneLabel),
+                        decoration: InputDecoration(
+                          labelText: l10n.coupleCreateTimezoneLabel,
+                        ),
                         items: [
                           for (final tz in _timezones)
                             DropdownMenuItem(value: tz, child: Text(tz)),
@@ -122,15 +125,19 @@ class _CoupleCreateScreenState extends ConsumerState<CoupleCreateScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      width: RachaTokens.borderHairline),
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: RachaTokens.borderHairline,
+                  ),
                 ),
               ),
               child: FilledButton(
                 onPressed: loading ? null : _submit,
                 child: loading
                     ? const SizedBox(
-                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(l10n.coupleCreateSubmit),
               ),
             ),

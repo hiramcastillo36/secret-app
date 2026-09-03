@@ -1,6 +1,6 @@
-/// Plain models for the auth feature. These will move to freezed + json
-/// serialization with the shared models task; hand-written for now so the slice
-/// runs without a codegen step.
+/// Plain hand-written models for the auth feature. Every [fromJson] tolerates a
+/// missing or null field rather than throwing, so a slimmer server response can
+/// never crash the bootstrap.
 class AppUser {
   const AppUser({
     required this.id,
@@ -9,7 +9,7 @@ class AppUser {
     required this.timezone,
     required this.locale,
     this.avatarUrl,
-    this.emailVerified = true,
+    this.emailVerified = false,
     this.status = 'active',
   });
 
@@ -25,17 +25,16 @@ class AppUser {
   bool get pendingDeletion => status == 'pending_deletion';
 
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
-        id: json['id'] as String,
-        email: json['email'] as String,
-        displayName: json['display_name'] as String,
-        timezone: json['timezone'] as String,
-        locale: (json['locale'] ?? 'es') as String,
-        avatarUrl: json['avatar_url'] as String?,
-        emailVerified: json.containsKey('email_verified_at')
-            ? json['email_verified_at'] != null
-            : true,
-        status: (json['status'] ?? 'active') as String,
-      );
+    id: (json['id'] ?? '') as String,
+    email: (json['email'] ?? '') as String,
+    displayName: (json['display_name'] ?? '') as String,
+    timezone: (json['timezone'] ?? 'UTC') as String,
+    locale: (json['locale'] ?? 'es') as String,
+    avatarUrl: json['avatar_url'] as String?,
+    // Absent or null => not verified. Never assume verified.
+    emailVerified: json['email_verified_at'] != null,
+    status: (json['status'] ?? 'active') as String,
+  );
 }
 
 class AuthSession {
@@ -52,15 +51,17 @@ class AuthSession {
   final String? coupleId;
 
   factory AuthSession.fromJson(Map<String, dynamic> json) => AuthSession(
-        accessToken: json['access_token'] as String,
-        refreshToken: json['refresh_token'] as String,
-        user: AppUser.fromJson((json['user'] as Map).cast<String, dynamic>()),
-        coupleId: json['couple_id'] as String?,
-      );
+    accessToken: (json['access_token'] ?? '') as String,
+    refreshToken: (json['refresh_token'] ?? '') as String,
+    user: AppUser.fromJson(
+      ((json['user'] as Map?) ?? const {}).cast<String, dynamic>(),
+    ),
+    coupleId: json['couple_id'] as String?,
+  );
 }
 
 /// Where the user should land after the splash checks GET /me.
-enum BootstrapRoute { onboarding, coupleSetup, home }
+enum BootstrapRoute { coupleSetup, home }
 
 class MeBootstrap {
   const MeBootstrap({
@@ -79,12 +80,18 @@ class MeBootstrap {
   bool get pendingDeletion => user.pendingDeletion;
 
   factory MeBootstrap.fromJson(Map<String, dynamic> json) {
-    final user = AppUser.fromJson((json['user'] as Map).cast<String, dynamic>());
+    final user = AppUser.fromJson(
+      ((json['user'] as Map?) ?? const {}).cast<String, dynamic>(),
+    );
     final couple = json['couple'];
+    final scheduled = json['deletion_scheduled_for'];
     return MeBootstrap(
       user: user,
       coupleName: couple is Map ? couple['name'] as String? : null,
       route: couple == null ? BootstrapRoute.coupleSetup : BootstrapRoute.home,
+      deletionScheduledFor: scheduled is String
+          ? DateTime.tryParse(scheduled)?.toLocal()
+          : null,
     );
   }
 }

@@ -15,14 +15,16 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(ProviderScope(
-      child: MaterialApp.router(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('es'),
-        routerConfig: router,
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('es'),
+          routerConfig: router,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     // With no date the primary action is "Guardar idea" and the date toggle is off.

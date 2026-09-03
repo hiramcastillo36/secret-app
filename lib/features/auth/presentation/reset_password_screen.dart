@@ -7,7 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_banner.dart';
 import '../../common/field_tile.dart';
-import '../data/auth_repository.dart';
+import '../application/auth.dart';
 import 'password_meter.dart';
 
 /// Reached from the email link (`/auth/reset-password?token=...`) or opened
@@ -17,7 +17,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String? token;
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
@@ -60,18 +61,22 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       _error = null;
     });
     try {
-      await ref.read(authRepositoryProvider).resetPassword(
+      await ref
+          .read(authActionsProvider.notifier)
+          .resetPassword(
             token: _token.text.trim(),
             newPassword: _password.text,
           );
       if (mounted) setState(() => _done = true);
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() => _error = switch (e.code) {
-              'INVALID_TOKEN' => l10n.resetInvalidToken,
-              'NETWORK' => l10n.commonNoConnection,
-              _ => e.message,
-            });
+        setState(
+          () => _error = switch (e.code) {
+            'INVALID_TOKEN' => l10n.resetInvalidToken,
+            'NETWORK' => l10n.commonNoConnection,
+            _ => e.message,
+          },
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -92,7 +97,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.resetDone, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      l10n.resetDone,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                     const SizedBox(height: RachaTokens.space5),
                     FilledButton(
                       onPressed: () => context.go('/login'),
@@ -112,14 +120,18 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     if (widget.token == null) ...[
                       TextField(
                         controller: _token,
-                        decoration: InputDecoration(labelText: l10n.resetTokenLabel),
+                        decoration: InputDecoration(
+                          labelText: l10n.resetTokenLabel,
+                        ),
                       ),
                       const SizedBox(height: RachaTokens.space3),
                     ],
                     TextField(
                       controller: _password,
                       obscureText: true,
-                      decoration: InputDecoration(labelText: l10n.resetNewPassword),
+                      decoration: InputDecoration(
+                        labelText: l10n.resetNewPassword,
+                      ),
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: RachaTokens.space3),
@@ -128,7 +140,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: l10n.resetConfirmLabel,
-                        errorText: (_confirm.text.isNotEmpty &&
+                        errorText:
+                            (_confirm.text.isNotEmpty &&
                                 _confirm.text != _password.text)
                             ? l10n.resetMismatch
                             : null,
@@ -145,10 +158,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     const SizedBox(height: RachaTokens.space5),
                     FilledButton(
                       onPressed: (_saving || !_canSubmit) ? null : _submit,
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
                       child: _saving
                           ? const SizedBox(
-                              height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : Text(l10n.resetSubmit),
                     ),
                   ],

@@ -22,7 +22,6 @@ class AppTheme {
       // System typography — no bundled fonts. The user's accessibility text size
       // comes for free.
       scaffoldBackgroundColor: scheme.surface,
-      splashFactory: NoSplash.splashFactory,
     );
 
     return base.copyWith(
@@ -33,7 +32,10 @@ class AppTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: RachaTokens.brM,
-          side: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          side: BorderSide(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -52,7 +54,10 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: RachaTokens.brS,
-          borderSide: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          borderSide: BorderSide(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: RachaTokens.brS,
@@ -67,12 +72,18 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
           shape: const RoundedRectangleBorder(borderRadius: RachaTokens.brS),
-          textStyle: const TextStyle(fontSize: RachaType.body, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontSize: RachaType.body,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontSize: RachaType.callout, fontWeight: FontWeight.w500),
+          textStyle: const TextStyle(
+            fontSize: RachaType.callout,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       dividerTheme: DividerThemeData(

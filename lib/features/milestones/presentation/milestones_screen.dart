@@ -59,17 +59,17 @@ class MilestonesScreen extends ConsumerWidget {
 }
 
 String milestoneLabel(AppLocalizations l10n, Milestone m) => switch (m.kind) {
-      MilestoneKind.dates when m.target == 1 => l10n.milestoneFirstDate,
-      MilestoneKind.dates => l10n.milestoneDates(m.target),
-      MilestoneKind.streakWeeks => l10n.milestoneStreak(m.target),
-      MilestoneKind.daysTogether => l10n.milestoneDays(m.target),
-    };
+  MilestoneKind.dates when m.target == 1 => l10n.milestoneFirstDate,
+  MilestoneKind.dates => l10n.milestoneDates(m.target),
+  MilestoneKind.streakWeeks => l10n.milestoneStreak(m.target),
+  MilestoneKind.daysTogether => l10n.milestoneDays(m.target),
+};
 
 IconData milestoneIcon(MilestoneKind kind) => switch (kind) {
-      MilestoneKind.dates => Icons.favorite,
-      MilestoneKind.streakWeeks => Icons.local_fire_department,
-      MilestoneKind.daysTogether => Icons.calendar_today,
-    };
+  MilestoneKind.dates => Icons.favorite,
+  MilestoneKind.streakWeeks => Icons.local_fire_department,
+  MilestoneKind.daysTogether => Icons.calendar_today,
+};
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
@@ -126,15 +126,19 @@ class _LatestCard extends StatelessWidget {
                 Text(
                   milestoneLabel(l10n, milestone),
                   style: TextStyle(
-                      color: scheme.onPrimary,
-                      fontSize: RachaType.body,
-                      fontWeight: FontWeight.w800),
+                    color: scheme.onPrimary,
+                    fontSize: RachaType.body,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: RachaTokens.space1),
-                Text(l10n.milestonesUnlocked,
-                    style: TextStyle(
-                        color: scheme.onPrimary.withValues(alpha: 0.6),
-                        fontSize: RachaType.caption)),
+                Text(
+                  l10n.milestonesUnlocked,
+                  style: TextStyle(
+                    color: scheme.onPrimary.withValues(alpha: 0.6),
+                    fontSize: RachaType.caption,
+                  ),
+                ),
               ],
             ),
           ),
@@ -157,7 +161,9 @@ class _Row extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: RachaTokens.space2),
       padding: const EdgeInsets.all(RachaTokens.space3),
       decoration: BoxDecoration(
-        color: done ? scheme.surfaceContainerLow : scheme.surfaceContainerHighest,
+        color: done
+            ? scheme.surfaceContainerLow
+            : scheme.surfaceContainerHighest,
         borderRadius: RachaTokens.brM,
         border: Border.all(
           color: done ? scheme.outlineVariant : Colors.transparent,
@@ -195,12 +201,19 @@ class _Row extends StatelessWidget {
                       value: milestone.progress,
                       minHeight: 6,
                       backgroundColor: scheme.surface,
+                      semanticsLabel:
+                          '${milestone.current} / ${milestone.target}',
+                      semanticsValue: '${(milestone.progress * 100).round()}%',
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text('${milestone.current} / ${milestone.target}',
-                      style: TextStyle(
-                          color: scheme.onSurfaceVariant, fontSize: RachaType.micro)),
+                  Text(
+                    '${milestone.current} / ${milestone.target}',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: RachaType.micro,
+                    ),
+                  ),
                 ],
               ],
             ),

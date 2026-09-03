@@ -7,24 +7,31 @@ import 'package:racha/l10n/app_localizations.dart';
 import 'package:racha/features/auth/presentation/onboarding_screen.dart';
 
 void main() {
-  testWidgets('onboarding shows the promise and the two actions', (tester) async {
+  testWidgets('onboarding shows the promise and the two actions', (
+    tester,
+  ) async {
     final router = GoRouter(
       initialLocation: '/onboarding',
       routes: [
-        GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
+        GoRoute(
+          path: '/onboarding',
+          builder: (_, __) => const OnboardingScreen(),
+        ),
         GoRoute(path: '/register', builder: (_, __) => const Scaffold()),
         GoRoute(path: '/login', builder: (_, __) => const Scaffold()),
       ],
     );
 
-    await tester.pumpWidget(ProviderScope(
-      child: MaterialApp.router(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('es'),
-        routerConfig: router,
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('es'),
+          routerConfig: router,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     // First card: the promise plus a single "Next" and a "Skip".

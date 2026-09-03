@@ -32,25 +32,26 @@ class Plan {
   final String? responseNote;
 
   bool get isIdea => scheduledAt == null;
-  bool get isPast => scheduledAt != null && scheduledAt!.isBefore(DateTime.now());
+  bool get isPast =>
+      scheduledAt != null && scheduledAt!.isBefore(DateTime.now());
   bool get isActionable =>
       status == 'proposed' || status == 'confirmed' || status == 'idea';
 
   factory Plan.fromJson(Map<String, dynamic> j) => Plan(
-        id: j['id'] as String,
-        proposedBy: (j['proposed_by'] ?? '') as String,
-        title: (j['title'] ?? '') as String,
-        status: (j['status'] ?? 'idea') as String,
-        notes: j['notes'] as String?,
-        placeId: j['place_id'] as String?,
-        dateEntryId: j['date_entry_id'] as String?,
-        scheduledAt: j['scheduled_at'] == null
-            ? null
-            : DateTime.parse(j['scheduled_at'] as String).toLocal(),
-        hasTime: (j['has_time'] ?? false) as bool,
-        weekKey: j['week_key'] as String?,
-        responseNote: j['response_note'] as String?,
-      );
+    id: j['id'] as String,
+    proposedBy: (j['proposed_by'] ?? '') as String,
+    title: (j['title'] ?? '') as String,
+    status: (j['status'] ?? 'idea') as String,
+    notes: j['notes'] as String?,
+    placeId: j['place_id'] as String?,
+    dateEntryId: j['date_entry_id'] as String?,
+    scheduledAt: j['scheduled_at'] == null
+        ? null
+        : DateTime.parse(j['scheduled_at'] as String).toLocal(),
+    hasTime: (j['has_time'] ?? false) as bool,
+    weekKey: j['week_key'] as String?,
+    responseNote: j['response_note'] as String?,
+  );
 }
 
 class PlanList {
@@ -59,11 +60,11 @@ class PlanList {
   final int needsResponse;
 
   factory PlanList.fromJson(Map<String, dynamic> j) => PlanList(
-        plans: ((j['plans'] as List?) ?? const [])
-            .map((e) => Plan.fromJson((e as Map).cast<String, dynamic>()))
-            .toList(),
-        needsResponse: (j['needs_response'] ?? 0) as int,
-      );
+    plans: ((j['plans'] as List?) ?? const [])
+        .map((e) => Plan.fromJson((e as Map).cast<String, dynamic>()))
+        .toList(),
+    needsResponse: (j['needs_response'] ?? 0) as int,
+  );
 
   /// The soonest dated, still-open plan, or null.
   Plan? get next {
@@ -77,7 +78,8 @@ class PlanList {
     return null;
   }
 
-  List<Plan> get ideas => plans.where((p) => p.isIdea && p.status == 'idea').toList();
+  List<Plan> get ideas =>
+      plans.where((p) => p.isIdea && p.status == 'idea').toList();
 }
 
 /// One entry on the calendar: a past date or an upcoming plan.
@@ -103,27 +105,31 @@ class CalendarItem {
   bool get isPlan => kind == 'plan';
 
   factory CalendarItem.fromJson(Map<String, dynamic> j) => CalendarItem(
-        kind: j['kind'] as String,
-        id: j['id'] as String,
-        title: (j['title'] ?? '') as String,
-        at: DateTime.parse(j['at'] as String).toLocal(),
-        placeId: j['place_id'] as String?,
-        status: j['status'] as String?,
-        countsForStreak: j['counts_for_streak'] as bool?,
-      );
+    kind: j['kind'] as String,
+    id: j['id'] as String,
+    title: (j['title'] ?? '') as String,
+    at: DateTime.parse(j['at'] as String).toLocal(),
+    placeId: j['place_id'] as String?,
+    status: j['status'] as String?,
+    countsForStreak: j['counts_for_streak'] as bool?,
+  );
 }
 
 class CalendarWeek {
-  const CalendarWeek({required this.weekKey, required this.covered, required this.planned});
+  const CalendarWeek({
+    required this.weekKey,
+    required this.covered,
+    required this.planned,
+  });
   final String weekKey;
   final bool covered;
   final bool planned;
 
   factory CalendarWeek.fromJson(Map<String, dynamic> j) => CalendarWeek(
-        weekKey: j['week_key'] as String,
-        covered: (j['covered'] ?? false) as bool,
-        planned: (j['planned'] ?? false) as bool,
-      );
+    weekKey: j['week_key'] as String,
+    covered: (j['covered'] ?? false) as bool,
+    planned: (j['planned'] ?? false) as bool,
+  );
 }
 
 class Calendar {
@@ -149,11 +155,9 @@ class Calendar {
     );
   }
 
-  List<CalendarItem> forDay(DateTime day) =>
-      itemsByDay[_key(day)] ?? const [];
+  List<CalendarItem> forDay(DateTime day) => itemsByDay[_key(day)] ?? const [];
 
-  bool dayHasPastDate(DateTime day) =>
-      forDay(day).any((i) => i.kind == 'date');
+  bool dayHasPastDate(DateTime day) => forDay(day).any((i) => i.kind == 'date');
 
   bool dayHasPlan(DateTime day) => forDay(day).any((i) => i.kind == 'plan');
 
@@ -167,7 +171,13 @@ typedef PlanPlace = Place;
 /// What the plan form can be pre-filled with — from a calendar day, a wish, or a
 /// place on the map.
 class PlanSeed {
-  const PlanSeed({this.date, this.title, this.placeId, this.placeName, this.wishlistItemId});
+  const PlanSeed({
+    this.date,
+    this.title,
+    this.placeId,
+    this.placeName,
+    this.wishlistItemId,
+  });
 
   final DateTime? date;
   final String? title;

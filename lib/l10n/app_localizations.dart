@@ -134,6 +134,72 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get commonRetry;
 
+  /// No description provided for @a11yBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get a11yBack;
+
+  /// No description provided for @a11yCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Open calendar'**
+  String get a11yCalendar;
+
+  /// No description provided for @a11yNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get a11yNotifications;
+
+  /// No description provided for @a11yNotificationsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications, {count} unread'**
+  String a11yNotificationsUnread(int count);
+
+  /// No description provided for @a11yClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get a11yClearSearch;
+
+  /// No description provided for @a11yPreviousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get a11yPreviousMonth;
+
+  /// No description provided for @a11yNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get a11yNextMonth;
+
+  /// No description provided for @a11yMoreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get a11yMoreOptions;
+
+  /// No description provided for @a11yWeekStrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak over the last 12 weeks'**
+  String get a11yWeekStrip;
+
+  /// No description provided for @a11yRatingStars.
+  ///
+  /// In en, this message translates to:
+  /// **'{rating} of 5 stars'**
+  String a11yRatingStars(int rating);
+
+  /// No description provided for @a11yCategoryShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{category}: {percent}%'**
+  String a11yCategoryShare(String category, String percent);
+
   /// No description provided for @commonCancel.
   ///
   /// In en, this message translates to:
@@ -1015,6 +1081,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account is scheduled for deletion.'**
   String get homeDeletionBanner;
+
+  /// No description provided for @homeDeletionBannerOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will be deleted on {date}.'**
+  String homeDeletionBannerOn(String date);
 
   /// No description provided for @homeCancelDeletion.
   ///
@@ -2414,11 +2486,11 @@ abstract class AppLocalizations {
   /// **'Time zone'**
   String get profileTimezone;
 
-  /// No description provided for @profileWeekStart.
+  /// No description provided for @coupleWeekCloseNote.
   ///
   /// In en, this message translates to:
-  /// **'Week starts'**
-  String get profileWeekStart;
+  /// **'Your streak week closes on Sunday night, in your couple\'s time zone.'**
+  String get coupleWeekCloseNote;
 
   /// No description provided for @profileInviteCode.
   ///
@@ -2443,18 +2515,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit profile'**
   String get profileEditProfile;
-
-  /// No description provided for @weekStartMonday.
-  ///
-  /// In en, this message translates to:
-  /// **'Monday'**
-  String get weekStartMonday;
-
-  /// No description provided for @weekStartSunday.
-  ///
-  /// In en, this message translates to:
-  /// **'Sunday'**
-  String get weekStartSunday;
 
   /// No description provided for @mapSummary.
   ///

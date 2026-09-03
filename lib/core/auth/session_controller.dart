@@ -22,7 +22,10 @@ class SessionController extends StateNotifier<AuthStatus> {
         : AuthStatus.authenticated;
   }
 
-  Future<void> onSignedIn({required String access, required String refresh}) async {
+  Future<void> onSignedIn({
+    required String access,
+    required String refresh,
+  }) async {
     await _storage.save(access: access, refresh: refresh);
     state = AuthStatus.authenticated;
   }
@@ -35,5 +38,5 @@ class SessionController extends StateNotifier<AuthStatus> {
 
 final sessionControllerProvider =
     StateNotifierProvider<SessionController, AuthStatus>((ref) {
-  return SessionController(ref.watch(tokenStorageProvider));
-});
+      return SessionController(ref.watch(tokenStorageProvider));
+    });

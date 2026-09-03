@@ -27,7 +27,10 @@ class RachaTokens {
   /// The streak hero is the one surface allowed a fill instead of tone + border.
   /// Fixed plum in both themes — it always carries white text, so it needs no
   /// light/dark variant.
-  static const List<Color> streakGradient = [Color(0xFF3B0020), Color(0xFF8E2C4E)];
+  static const List<Color> streakGradient = [
+    Color(0xFF3B0020),
+    Color(0xFF8E2C4E),
+  ];
 
   // --- Spacing (7) ---
   static const double space1 = 4;

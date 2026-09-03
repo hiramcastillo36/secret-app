@@ -16,11 +16,29 @@ for the token pair.
 
 ```sh
 flutter pub get
+# The default API_BASE_URL is https://api.racha.app (production), so local dev
+# MUST pass an explicit --dart-define:
 # iOS simulator can reach the host directly:
 flutter run --dart-define=API_BASE_URL=http://localhost:8080
-# Android emulator uses the host loopback alias (this is the default):
+# Android emulator uses the host loopback alias:
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
 ```
+
+Cleartext (`http://`) is only permitted in **debug** builds, and only to
+loopback hosts — see `android/app/src/debug/res/xml/network_security_config.xml`.
+A release build pointed at an `http://` URL throws at startup by design.
+
+## Release build (Android)
+
+```sh
+# One-time: create the upload keystore and android/key.properties
+cp android/key.properties.example android/key.properties   # then edit it
+# Build the store bundle (signed with the real keystore, R8 + resource shrink on):
+flutter build appbundle --release --dart-define=API_BASE_URL=https://api.racha.app
+```
+
+`android/key.properties` and `*.jks` are git-ignored. Enrol the app in Play App
+Signing so Google holds the app signing key.
 
 ## Analyze & test
 

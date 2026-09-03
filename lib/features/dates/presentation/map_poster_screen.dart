@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import '../../../core/format/money.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -7,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../data/dates_repository.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 
 /// /places/poster — a shareable poster built from the couple's visited places.
@@ -30,21 +31,26 @@ class _MapPosterScreenState extends ConsumerState<MapPosterScreen> {
     setState(() => _busy = true);
     try {
       final boundary =
-          _posterKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+          _posterKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 3);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
       if (bytes == null) throw StateError('no bytes');
       await Clipboard.setData(
-        ClipboardData(text: 'racha://poster/${DateTime.now().millisecondsSinceEpoch}'),
+        ClipboardData(
+          text: 'racha://poster/${DateTime.now().millisecondsSinceEpoch}',
+        ),
       );
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.posterSaved)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.posterSaved)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.commonSomethingWentWrong)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.commonSomethingWentWrong)));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -91,7 +97,10 @@ class _MapPosterScreenState extends ConsumerState<MapPosterScreen> {
                             ? const SizedBox(
                                 height: 18,
                                 width: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2))
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : const Icon(Icons.ios_share),
                         label: Text(l10n.posterSave),
                       ),
@@ -112,26 +121,40 @@ class _Poster extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    final maxVisits =
-        summary.places.map((p) => p.visits).fold(1, (a, b) => a > b ? a : b);
+    final maxVisits = summary.places
+        .map((p) => p.visits)
+        .fold(1, (a, b) => a > b ? a : b);
 
     return Container(
       width: 320,
       decoration: BoxDecoration(
         color: const Color(0xFF2D1A20),
         borderRadius: RachaTokens.brL,
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.3), width: 2),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.3),
+          width: 2,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           const SizedBox(height: RachaTokens.space5),
-          Text(l10n.posterHeadline(summary.totalVisits),
-              style: const TextStyle(
-                  color: Colors.white, fontSize: RachaType.title, fontWeight: FontWeight.w800)),
+          Text(
+            l10n.posterHeadline(summary.totalVisits),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: RachaType.title,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(height: RachaTokens.space1),
-          Text(l10n.posterSubhead(summary.distinctPlaces),
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: RachaType.caption)),
+          Text(
+            l10n.posterSubhead(summary.distinctPlaces),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.4),
+              fontSize: RachaType.caption,
+            ),
+          ),
           const SizedBox(height: RachaTokens.space4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space4),
@@ -152,17 +175,27 @@ class _Poster extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: RachaTokens.space4, vertical: RachaTokens.space5),
+              horizontal: RachaTokens.space4,
+              vertical: RachaTokens.space5,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _PosterStat(value: '${summary.distinctPlaces}', label: l10n.posterPlaces),
-                _PosterStat(value: '${summary.totalVisits}', label: l10n.posterDates),
                 _PosterStat(
-                    value: summary.totalCost > 0
-                        ? '\$${summary.totalCost.toStringAsFixed(0)}'
-                        : '—',
-                    label: l10n.posterSpent),
+                  value: '${summary.distinctPlaces}',
+                  label: l10n.posterPlaces,
+                ),
+                _PosterStat(
+                  value: '${summary.totalVisits}',
+                  label: l10n.posterDates,
+                ),
+                _PosterStat(
+                  value: formatMoneyByCurrency(
+                    summary.costByCurrency,
+                    locale: Localizations.localeOf(context).toString(),
+                  ),
+                  label: l10n.posterSpent,
+                ),
               ],
             ),
           ),
@@ -171,12 +204,17 @@ class _Poster extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
             decoration: BoxDecoration(
               border: Border(
-                  top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+              ),
             ),
-            child: Text('racha.app',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.25), fontSize: RachaType.micro)),
+            child: Text(
+              'racha.app',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.25),
+                fontSize: RachaType.micro,
+              ),
+            ),
           ),
         ],
       ),
@@ -191,18 +229,34 @@ class _PosterStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Text(value,
+    return Column(
+      children: [
+        Text(
+          value,
           style: const TextStyle(
-              color: Colors.white, fontSize: RachaType.headline, fontWeight: FontWeight.w800)),
-      Text(label,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: RachaType.micro)),
-    ]);
+            color: Colors.white,
+            fontSize: RachaType.headline,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.4),
+            fontSize: RachaType.micro,
+          ),
+        ),
+      ],
+    );
   }
 }
 
 class _DotMapPainter extends CustomPainter {
-  _DotMapPainter({required this.places, required this.maxVisits, required this.dot});
+  _DotMapPainter({
+    required this.places,
+    required this.maxVisits,
+    required this.dot,
+  });
 
   final List<PlaceStat> places;
   final int maxVisits;
@@ -243,7 +297,11 @@ class _DotMapPainter extends CustomPainter {
       final dx = pad + (p.lng - minLng) / lngSpan * (size.width - pad * 2);
       final dy = pad + (maxLat - p.lat) / latSpan * (size.height - pad * 2);
       final r = (5 + p.visits / maxVisits * 13).toDouble();
-      canvas.drawCircle(Offset(dx, dy), r + 3, Paint()..color = dot.withValues(alpha: 0.25));
+      canvas.drawCircle(
+        Offset(dx, dy),
+        r + 3,
+        Paint()..color = dot.withValues(alpha: 0.25),
+      );
       canvas.drawCircle(Offset(dx, dy), r, Paint()..color = dot);
     }
   }

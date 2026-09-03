@@ -26,12 +26,13 @@ class PrivacySettings {
   bool get notesPrivateByDefault => defaultNotesVisibility == 'private';
 
   factory PrivacySettings.fromJson(Map<String, dynamic> j) => PrivacySettings(
-        requireTagConsent: (j['require_tag_consent'] ?? false) as bool,
-        shareCost: (j['share_cost'] ?? true) as bool,
-        defaultNotesVisibility: (j['default_notes_visibility'] ?? 'couple') as String,
-        analyticsOptIn: (j['analytics_opt_in'] ?? false) as bool,
-        marketingEmailsOptIn: (j['marketing_emails_opt_in'] ?? false) as bool,
-      );
+    requireTagConsent: (j['require_tag_consent'] ?? false) as bool,
+    shareCost: (j['share_cost'] ?? true) as bool,
+    defaultNotesVisibility:
+        (j['default_notes_visibility'] ?? 'couple') as String,
+    analyticsOptIn: (j['analytics_opt_in'] ?? false) as bool,
+    marketingEmailsOptIn: (j['marketing_emails_opt_in'] ?? false) as bool,
+  );
 }
 
 class PrivacyRepository {
@@ -41,7 +42,9 @@ class PrivacyRepository {
   Future<PrivacySettings> get() async {
     try {
       final res = await _dio.get<Map<String, dynamic>>('/me/privacy');
-      return PrivacySettings.fromJson((res.data!['privacy'] as Map).cast<String, dynamic>());
+      return PrivacySettings.fromJson(
+        (res.data!['privacy'] as Map).cast<String, dynamic>(),
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -50,8 +53,13 @@ class PrivacyRepository {
   /// PATCH /me/privacy — only the keys present in [changes] are touched.
   Future<PrivacySettings> patch(Map<String, dynamic> changes) async {
     try {
-      final res = await _dio.patch<Map<String, dynamic>>('/me/privacy', data: changes);
-      return PrivacySettings.fromJson((res.data!['privacy'] as Map).cast<String, dynamic>());
+      final res = await _dio.patch<Map<String, dynamic>>(
+        '/me/privacy',
+        data: changes,
+      );
+      return PrivacySettings.fromJson(
+        (res.data!['privacy'] as Map).cast<String, dynamic>(),
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -82,6 +90,8 @@ final privacyRepositoryProvider = Provider<PrivacyRepository>((ref) {
   return PrivacyRepository(ref.watch(dioProvider));
 });
 
-final privacySettingsProvider = FutureProvider.autoDispose<PrivacySettings>((ref) {
+final privacySettingsProvider = FutureProvider.autoDispose<PrivacySettings>((
+  ref,
+) {
   return ref.watch(privacyRepositoryProvider).get();
 });

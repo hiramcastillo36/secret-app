@@ -27,6 +27,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonRetry => 'Reintentar';
 
   @override
+  String get a11yBack => 'Atrás';
+
+  @override
+  String get a11yCalendar => 'Abrir calendario';
+
+  @override
+  String get a11yNotifications => 'Notificaciones';
+
+  @override
+  String a11yNotificationsUnread(int count) {
+    return 'Notificaciones, $count sin leer';
+  }
+
+  @override
+  String get a11yClearSearch => 'Limpiar búsqueda';
+
+  @override
+  String get a11yPreviousMonth => 'Mes anterior';
+
+  @override
+  String get a11yNextMonth => 'Mes siguiente';
+
+  @override
+  String get a11yMoreOptions => 'Más opciones';
+
+  @override
+  String get a11yWeekStrip => 'Racha de las últimas 12 semanas';
+
+  @override
+  String a11yRatingStars(int rating) {
+    return '$rating de 5 estrellas';
+  }
+
+  @override
+  String a11yCategoryShare(String category, String percent) {
+    return '$category: $percent%';
+  }
+
+  @override
   String get commonCancel => 'Cancelar';
 
   @override
@@ -524,6 +563,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeDeletionBanner => 'Tu cuenta está programada para borrarse.';
+
+  @override
+  String homeDeletionBannerOn(String date) {
+    return 'Tu cuenta se borrará el $date.';
+  }
 
   @override
   String get homeCancelDeletion => 'Cancelar';
@@ -1300,7 +1344,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileTimezone => 'Zona horaria';
 
   @override
-  String get profileWeekStart => 'Inicio de semana';
+  String get coupleWeekCloseNote =>
+      'Tu semana de racha cierra el domingo por la noche, en la zona horaria de la pareja.';
 
   @override
   String get profileInviteCode => 'Código de invitación';
@@ -1313,12 +1358,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profileEditProfile => 'Editar perfil';
-
-  @override
-  String get weekStartMonday => 'Lunes';
-
-  @override
-  String get weekStartSunday => 'Domingo';
 
   @override
   String get mapSummary => 'Resumen';

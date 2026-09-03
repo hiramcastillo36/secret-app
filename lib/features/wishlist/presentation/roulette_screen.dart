@@ -8,7 +8,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../plans/domain/models.dart';
-import '../data/wishlist_repository.dart';
+import '../application/wishlist.dart';
 import '../domain/models.dart';
 
 /// /wishlist/roulette — picks one open wish at random. The wheel is decorative;
@@ -36,7 +36,9 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
       _turns += 4 + math.Random().nextDouble() * 3;
     });
     try {
-      final item = await ref.read(wishlistRepositoryProvider).pick(cheap: _cheap);
+      final item = await ref
+          .read(wishlistControllerProvider.notifier)
+          .pick(cheap: _cheap);
       // Let the wheel finish before the result lands.
       await Future<void>.delayed(const Duration(milliseconds: 900));
       if (mounted) setState(() => _pick = item);
@@ -47,7 +49,9 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
           _empty = e.code == 'wishlist_empty';
         });
         if (!_empty) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.message)));
         }
       }
     } finally {
@@ -58,10 +62,11 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final labels = (ref.watch(wishlistProvider).valueOrNull?.open ?? const <WishItem>[])
-        .map((w) => w.title.split(' ').first)
-        .take(8)
-        .toList();
+    final labels =
+        (ref.watch(wishlistProvider).valueOrNull?.open ?? const <WishItem>[])
+            .map((w) => w.title.split(' ').first)
+            .take(8)
+            .toList();
 
     return Scaffold(
       body: Container(
@@ -78,14 +83,20 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
               Row(
                 children: [
                   IconButton(
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
                     onPressed: () => Navigator.of(context).maybePop(),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-                  Text(l10n.rouletteTitle,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: RachaType.headline,
-                          fontWeight: FontWeight.w800)),
+                  Text(
+                    l10n.rouletteTitle,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: RachaType.headline,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ],
               ),
               Expanded(
@@ -107,7 +118,9 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
                               child: CustomPaint(
                                 size: const Size(220, 220),
                                 painter: _WheelPainter(
-                                  segments: labels.length < 3 ? 6 : labels.length,
+                                  segments: labels.length < 3
+                                      ? 6
+                                      : labels.length,
                                   labels: labels,
                                 ),
                               ),
@@ -115,16 +128,24 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
                             // Pointer.
                             const Positioned(
                               top: -2,
-                              child: Icon(Icons.arrow_drop_down, color: Colors.white, size: 40),
+                              child: Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.white,
+                                size: 40,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(height: RachaTokens.space6),
                       if (_empty)
-                        Text(l10n.rouletteEmpty,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.7)))
+                        Text(
+                          l10n.rouletteEmpty,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        )
                       else if (_pick != null)
                         Container(
                           width: double.infinity,
@@ -132,28 +153,39 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: RachaTokens.brL,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                            ),
                           ),
                           child: Column(
                             children: [
-                              Text(l10n.rouletteTitle.toUpperCase(),
-                                  style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.6),
-                                      fontSize: RachaType.micro,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1)),
+                              Text(
+                                l10n.rouletteTitle.toUpperCase(),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: RachaType.micro,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1,
+                                ),
+                              ),
                               const SizedBox(height: RachaTokens.space2),
-                              Text(_pick!.title,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: RachaType.title,
-                                      fontWeight: FontWeight.w800)),
+                              Text(
+                                _pick!.title,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: RachaType.title,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
                               if (_pick!.placeName != null) ...[
                                 const SizedBox(height: RachaTokens.space1),
-                                Text(_pick!.placeName!,
-                                    style: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.6))),
+                                Text(
+                                  _pick!.placeName!,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                  ),
+                                ),
                               ],
                               const SizedBox(height: RachaTokens.space4),
                               FilledButton(
@@ -162,51 +194,69 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
                                   foregroundColor: RachaTokens.seed,
                                   minimumSize: const Size.fromHeight(48),
                                 ),
-                                onPressed: () => context.push('/plans/new',
-                                    extra: PlanSeed(
-                                      title: _pick!.title,
-                                      placeId: _pick!.placeId,
-                                      placeName: _pick!.placeName,
-                                      wishlistItemId: _pick!.id,
-                                    )),
+                                onPressed: () => context.push(
+                                  '/plans/new',
+                                  extra: PlanSeed(
+                                    title: _pick!.title,
+                                    placeId: _pick!.placeId,
+                                    placeName: _pick!.placeName,
+                                    wishlistItemId: _pick!.id,
+                                  ),
+                                ),
                                 child: Text(l10n.roulettePlanIt),
                               ),
                             ],
                           ),
                         )
                       else
-                        Text(l10n.rouletteTitle,
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                        Text(
+                          l10n.rouletteTitle,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                        ),
                     ],
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(RachaTokens.space5, 0, RachaTokens.space5,
-                    RachaTokens.space5),
+                padding: const EdgeInsets.fromLTRB(
+                  RachaTokens.space5,
+                  0,
+                  RachaTokens.space5,
+                  RachaTokens.space5,
+                ),
                 child: Column(
                   children: [
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.rouletteCheap,
-                          style: const TextStyle(color: Colors.white)),
+                      title: Text(
+                        l10n.rouletteCheap,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                       value: _cheap,
                       activeThumbColor: Colors.white,
-                      onChanged: _busy ? null : (v) => setState(() => _cheap = v),
+                      onChanged: _busy
+                          ? null
+                          : (v) => setState(() => _cheap = v),
                     ),
                     FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: RachaTokens.seed,
                         minimumSize: const Size.fromHeight(52),
-                        disabledBackgroundColor: Colors.white.withValues(alpha: 0.3),
+                        disabledBackgroundColor: Colors.white.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                       onPressed: _busy ? null : _spin,
-                      child: Text(_busy
-                          ? l10n.rouletteSpin
-                          : _pick == null
-                              ? l10n.rouletteSpin
-                              : l10n.rouletteAgain),
+                      child: Text(
+                        _busy
+                            ? l10n.rouletteSpin
+                            : _pick == null
+                            ? l10n.rouletteSpin
+                            : l10n.rouletteAgain,
+                      ),
                     ),
                   ],
                 ),
@@ -265,11 +315,15 @@ class _WheelPainter extends CustomPainter {
           text: TextSpan(
             text: labels[i],
             style: const TextStyle(
-                color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           textDirection: TextDirection.ltr,
         )..layout(maxWidth: radius * 0.7);
-        final pos = center +
+        final pos =
+            center +
             Offset(math.cos(mid), math.sin(mid)) * (radius * 0.6) -
             Offset(tp.width / 2, tp.height / 2);
         tp.paint(canvas, pos);

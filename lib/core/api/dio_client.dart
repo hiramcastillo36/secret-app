@@ -14,12 +14,16 @@ import '../storage/token_storage.dart';
 final dioProvider = Provider<Dio>((ref) {
   final storage = ref.watch(tokenStorageProvider);
 
-  final dio = Dio(BaseOptions(
-    baseUrl: Env.apiBaseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 15),
-    contentType: Headers.jsonContentType,
-  ));
+  final dio = Dio(
+    BaseOptions(
+      // The API is versioned: every route lives under /v1. Repository call sites
+      // pass version-free paths ('/auth/login', '/me', ...).
+      baseUrl: '${Env.apiBaseUrl.replaceFirst(RegExp(r'/+$'), '')}/v1',
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 15),
+      contentType: Headers.jsonContentType,
+    ),
+  );
 
   dio.interceptors.add(_AuthInterceptor(ref, dio, storage));
   return dio;
@@ -37,11 +41,15 @@ class _AuthInterceptor extends Interceptor {
   Future<void>? _refreshing;
 
   @override
-  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     // Every call carries the active language so the backend localizes errors,
     // emails and push text to match the UI. Independent of the refresh flow.
-    options.headers['Accept-Language'] =
-        resolvedLanguageTag(_ref.read(localeControllerProvider));
+    options.headers['Accept-Language'] = resolvedLanguageTag(
+      _ref.read(localeControllerProvider),
+    );
 
     if (!_isAuthPath(options.path)) {
       final access = await _storage.readAccess();
@@ -53,9 +61,13 @@ class _AuthInterceptor extends Interceptor {
   }
 
   @override
-  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     final response = err.response;
-    final isRefreshable = response?.statusCode == 401 &&
+    final isRefreshable =
+        response?.statusCode == 401 &&
         !_isAuthPath(err.requestOptions.path) &&
         err.requestOptions.extra['__retried'] != true;
 

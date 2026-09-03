@@ -58,37 +58,72 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, __) => const OnboardingScreen(),
+      ),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
 
       // Pairing (slice: couples)
-      GoRoute(path: '/couple/setup', builder: (_, __) => const CoupleSetupScreen()),
-      GoRoute(path: '/couple/create', builder: (_, __) => const CoupleCreateScreen()),
-      GoRoute(path: '/couple/join', builder: (_, __) => const CoupleJoinScreen()),
-      GoRoute(path: '/couple/waiting', builder: (_, __) => const CoupleWaitingScreen()),
+      GoRoute(
+        path: '/couple/setup',
+        builder: (_, __) => const CoupleSetupScreen(),
+      ),
+      GoRoute(
+        path: '/couple/create',
+        builder: (_, __) => const CoupleCreateScreen(),
+      ),
+      GoRoute(
+        path: '/couple/join',
+        builder: (_, __) => const CoupleJoinScreen(),
+      ),
+      GoRoute(
+        path: '/couple/waiting',
+        builder: (_, __) => const CoupleWaitingScreen(),
+      ),
 
       // --- The four main sections, with the persistent bottom bar ---
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => ScaffoldWithNavBar(navigationShell: shell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/dates', builder: (_, __) => const TimelineScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/places/map', builder: (_, __) => const PlacesMapScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
-          ]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/dates',
+                builder: (_, __) => const TimelineScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/places/map',
+                builder: (_, __) => const PlacesMapScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (_, __) => const ProfileScreen(),
+              ),
+            ],
+          ),
         ],
       ),
 
       // Register a date (modal stack over the bar)
-      GoRoute(path: '/dates/new', builder: (_, __) => const PlaceSearchScreen()),
+      GoRoute(
+        path: '/dates/new',
+        builder: (_, __) => const PlaceSearchScreen(),
+      ),
       GoRoute(
         path: '/dates/new/details',
         builder: (_, s) => DateDetailsScreen(place: s.extra as Place?),
@@ -102,7 +137,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => DateDetailScreen(dateId: s.pathParameters['id']!),
       ),
 
-      GoRoute(path: '/places/poster', builder: (_, __) => const MapPosterScreen()),
+      GoRoute(
+        path: '/places/poster',
+        builder: (_, __) => const MapPosterScreen(),
+      ),
       GoRoute(path: '/summary', builder: (_, __) => const SummaryScreen()),
       GoRoute(
         path: '/places/:id',
@@ -110,19 +148,38 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Resilient streak (slice: streak protection)
-      GoRoute(path: '/streak/protect', builder: (_, __) => const ProtectScreen()),
-      GoRoute(path: '/streak/freeze/new', builder: (_, __) => const FreezeFormScreen()),
-      GoRoute(path: '/streak/repair/new', builder: (_, __) => const RepairFormScreen()),
+      GoRoute(
+        path: '/streak/protect',
+        builder: (_, __) => const ProtectScreen(),
+      ),
+      GoRoute(
+        path: '/streak/freeze/new',
+        builder: (_, __) => const FreezeFormScreen(),
+      ),
+      GoRoute(
+        path: '/streak/repair/new',
+        builder: (_, __) => const RepairFormScreen(),
+      ),
       GoRoute(
         path: '/streak/repair/:id',
-        builder: (_, s) => RepairConfirmScreen(repairId: s.pathParameters['id']!),
+        builder: (_, s) =>
+            RepairConfirmScreen(repairId: s.pathParameters['id']!),
       ),
 
       // Wishlist & suggestions (slice: wishlist)
       GoRoute(path: '/wishlist', builder: (_, __) => const WishlistScreen()),
-      GoRoute(path: '/wishlist/new', builder: (_, __) => const WishFormScreen()),
-      GoRoute(path: '/wishlist/roulette', builder: (_, __) => const RouletteScreen()),
-      GoRoute(path: '/suggestions', builder: (_, __) => const SuggestionsScreen()),
+      GoRoute(
+        path: '/wishlist/new',
+        builder: (_, __) => const WishFormScreen(),
+      ),
+      GoRoute(
+        path: '/wishlist/roulette',
+        builder: (_, __) => const RouletteScreen(),
+      ),
+      GoRoute(
+        path: '/suggestions',
+        builder: (_, __) => const SuggestionsScreen(),
+      ),
 
       // Plans & calendar (slice: plans)
       GoRoute(path: '/calendar', builder: (_, __) => const CalendarScreen()),
@@ -143,24 +200,42 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Profile & account (settings stack over the bar)
       GoRoute(path: '/account', builder: (_, __) => const AccountScreen()),
-      GoRoute(path: '/profile/notifications', builder: (_, __) => const NotificationsScreen()),
-      GoRoute(path: '/profile/privacy', builder: (_, __) => const PrivacyScreen()),
-      GoRoute(path: '/profile/language', builder: (_, __) => const LanguageScreen()),
-      GoRoute(path: '/milestones', builder: (_, __) => const MilestonesScreen()),
+      GoRoute(
+        path: '/profile/notifications',
+        builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/privacy',
+        builder: (_, __) => const PrivacyScreen(),
+      ),
+      GoRoute(
+        path: '/profile/language',
+        builder: (_, __) => const LanguageScreen(),
+      ),
+      GoRoute(
+        path: '/milestones',
+        builder: (_, __) => const MilestonesScreen(),
+      ),
       GoRoute(path: '/wrapped', builder: (_, __) => const WrappedScreen()),
       GoRoute(path: '/activity', builder: (_, __) => const ActivityScreen()),
 
       // Account recovery (E10)
-      GoRoute(path: '/auth/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(
+        path: '/auth/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
       GoRoute(
         path: '/auth/reset-password',
-        builder: (_, s) => ResetPasswordScreen(token: s.uri.queryParameters['token']),
+        builder: (_, s) =>
+            ResetPasswordScreen(token: s.uri.queryParameters['token']),
       ),
       GoRoute(
         path: '/auth/verify-email',
-        builder: (_, s) => VerifyEmailScreen(token: s.uri.queryParameters['token']),
+        builder: (_, s) =>
+            VerifyEmailScreen(token: s.uri.queryParameters['token']),
       ),
     ],
-    errorBuilder: (_, state) => PlaceholderScreen(title: 'Ruta no encontrada: ${state.uri}'),
+    errorBuilder: (_, state) =>
+        PlaceholderScreen(title: 'Ruta no encontrada: ${state.uri}'),
   );
 });

@@ -7,9 +7,11 @@ String relativeDay(BuildContext context, DateTime whenUtc) {
   final locale = Localizations.localeOf(context).toLanguageTag();
   final now = DateTime.now();
   final when = whenUtc.toLocal();
-  final days = DateTime(now.year, now.month, now.day)
-      .difference(DateTime(when.year, when.month, when.day))
-      .inDays;
+  final days = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).difference(DateTime(when.year, when.month, when.day)).inDays;
 
   final es = locale.startsWith('es');
   if (days == 0) return es ? 'Hoy' : 'Today';
@@ -25,12 +27,12 @@ String relativeDay(BuildContext context, DateTime whenUtc) {
 
 /// A neutral icon per place category.
 IconData categoryIcon(String category) => switch (category) {
-      'restaurant' => Icons.restaurant,
-      'cafe' => Icons.local_cafe,
-      'bar' => Icons.local_bar,
-      'cinema' => Icons.movie,
-      'park' => Icons.park,
-      'museum' => Icons.museum,
-      'hotel' => Icons.hotel,
-      _ => Icons.place,
-    };
+  'restaurant' => Icons.restaurant,
+  'cafe' => Icons.local_cafe,
+  'bar' => Icons.local_bar,
+  'cinema' => Icons.movie,
+  'park' => Icons.park,
+  'museum' => Icons.museum,
+  'hotel' => Icons.hotel,
+  _ => Icons.place,
+};

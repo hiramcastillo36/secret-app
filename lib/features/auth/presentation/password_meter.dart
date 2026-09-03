@@ -24,11 +24,11 @@ Color _scoreColor(BuildContext context, int score) {
 }
 
 String _scoreLabel(AppLocalizations l10n, int score) => switch (score) {
-      >= 4 => l10n.pwStrong,
-      3 => l10n.pwGood,
-      2 => l10n.pwFair,
-      _ => l10n.pwWeak,
-    };
+  >= 4 => l10n.pwStrong,
+  3 => l10n.pwGood,
+  2 => l10n.pwFair,
+  _ => l10n.pwWeak,
+};
 
 /// Four bars that fill with the score, plus a one-word verdict.
 class PasswordMeter extends StatelessWidget {
@@ -56,8 +56,12 @@ class PasswordMeter extends StatelessWidget {
                   child: Container(
                     height: 4,
                     decoration: BoxDecoration(
-                      color: i <= score ? color : scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(RachaTokens.radiusFull),
+                      color: i <= score
+                          ? color
+                          : scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(
+                        RachaTokens.radiusFull,
+                      ),
                     ),
                   ),
                 ),
@@ -65,9 +69,14 @@ class PasswordMeter extends StatelessWidget {
             ],
           ),
           const SizedBox(height: RachaTokens.space1),
-          Text(_scoreLabel(l10n, score),
-              style: TextStyle(
-                  color: color, fontSize: RachaType.caption, fontWeight: FontWeight.w600)),
+          Text(
+            _scoreLabel(l10n, score),
+            style: TextStyle(
+              color: color,
+              fontSize: RachaType.caption,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -88,19 +97,25 @@ class PasswordRequirements extends StatelessWidget {
         : RachaTokens.okLight;
 
     Widget row(String label, bool met) => Padding(
-          padding: const EdgeInsets.only(bottom: RachaTokens.space1),
-          child: Row(
-            children: [
-              Icon(met ? Icons.check_circle : Icons.circle_outlined,
-                  size: 16, color: met ? ok : scheme.onSurfaceVariant),
-              const SizedBox(width: RachaTokens.space2),
-              Text(label,
-                  style: TextStyle(
-                      color: met ? ok : scheme.onSurfaceVariant,
-                      fontSize: RachaType.caption)),
-            ],
+      padding: const EdgeInsets.only(bottom: RachaTokens.space1),
+      child: Row(
+        children: [
+          Icon(
+            met ? Icons.check_circle : Icons.circle_outlined,
+            size: 16,
+            color: met ? ok : scheme.onSurfaceVariant,
           ),
-        );
+          const SizedBox(width: RachaTokens.space2),
+          Text(
+            label,
+            style: TextStyle(
+              color: met ? ok : scheme.onSurfaceVariant,
+              fontSize: RachaType.caption,
+            ),
+          ),
+        ],
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

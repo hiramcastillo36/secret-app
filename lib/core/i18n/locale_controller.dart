@@ -41,7 +41,9 @@ class LocaleController extends StateNotifier<Locale?> {
 }
 
 final localeControllerProvider =
-    StateNotifierProvider<LocaleController, Locale?>((ref) => LocaleController());
+    StateNotifierProvider<LocaleController, Locale?>(
+      (ref) => LocaleController(),
+    );
 
 /// The concrete BCP-47 tag to send as `Accept-Language` and to format dates and
 /// numbers with: the explicit choice if there is one, otherwise the device

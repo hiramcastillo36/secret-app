@@ -6,16 +6,20 @@ import '../domain/models.dart';
 
 /// Drives the create-couple and join-couple actions. State is an [AsyncValue]
 /// over the resulting couple/join payload.
-class CoupleController extends StateNotifier<AsyncValue<Object?>> {
-  CoupleController(this._ref) : super(const AsyncValue.data(null));
-
-  final Ref _ref;
+///
+/// `autoDispose`: create and join share this provider, so without it the error
+/// from one leaks onto the other screen. It is a `Notifier` —
+/// `StateNotifierProvider` is removed in Riverpod 3.
+class CoupleController extends AutoDisposeNotifier<AsyncValue<Object?>> {
+  @override
+  AsyncValue<Object?> build() => const AsyncValue.data(null);
 
   Future<Couple?> create({required String name, String? timezone}) async {
     state = const AsyncValue.loading();
     try {
-      final couple =
-          await _ref.read(coupleRepositoryProvider).create(name: name, timezone: timezone);
+      final couple = await ref
+          .read(coupleRepositoryProvider)
+          .create(name: name, timezone: timezone);
       state = AsyncValue.data(couple);
       return couple;
     } on ApiException catch (e, st) {
@@ -27,7 +31,7 @@ class CoupleController extends StateNotifier<AsyncValue<Object?>> {
   Future<JoinResult?> join(String inviteCode) async {
     state = const AsyncValue.loading();
     try {
-      final result = await _ref.read(coupleRepositoryProvider).join(inviteCode);
+      final result = await ref.read(coupleRepositoryProvider).join(inviteCode);
       state = AsyncValue.data(result);
       return result;
     } on ApiException catch (e, st) {
@@ -38,6 +42,6 @@ class CoupleController extends StateNotifier<AsyncValue<Object?>> {
 }
 
 final coupleControllerProvider =
-    StateNotifierProvider<CoupleController, AsyncValue<Object?>>((ref) {
-  return CoupleController(ref);
-});
+    AutoDisposeNotifierProvider<CoupleController, AsyncValue<Object?>>(
+      CoupleController.new,
+    );

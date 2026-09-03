@@ -3,20 +3,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/api/dio_client.dart';
 import '../../../core/auth/session_controller.dart';
 import '../../../core/i18n/locale_controller.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../../auth/data/auth_repository.dart';
+import '../../auth/application/auth.dart';
 import '../../common/section_label.dart';
 import '../../common/settings_group.dart';
-import '../../couple/data/couple_repository.dart';
+import '../../couple/application/couple.dart';
 import '../../couple/domain/models.dart';
-import '../../dates/data/dates_repository.dart';
+import '../../dates/application/dates.dart';
 import '../../dates/domain/models.dart';
-import '../../privacy/data/privacy_repository.dart';
+import '../../privacy/application/privacy.dart';
 import 'language_screen.dart';
 
 /// The couple's numbers on a plum header, then the couple + account settings and
@@ -29,11 +28,7 @@ class ProfileScreen extends ConsumerWidget {
     final storage = ref.read(tokenStorageProvider);
     final refresh = await storage.readRefresh();
     if (refresh != null && refresh.isNotEmpty) {
-      try {
-        await ref.read(dioProvider).post<void>('/auth/logout', data: {'refresh_token': refresh});
-      } catch (_) {
-        // Best effort; local sign-out proceeds regardless.
-      }
+      await ref.read(authActionsProvider.notifier).logout(refresh);
     }
     await ref.read(sessionControllerProvider.notifier).signOut();
     if (context.mounted) context.go('/splash');
@@ -50,12 +45,18 @@ class ProfileScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.privacyLeaveCouple,
-                style: const TextStyle(
-                    fontSize: RachaType.headline, fontWeight: FontWeight.w700)),
+            Text(
+              l10n.privacyLeaveCouple,
+              style: const TextStyle(
+                fontSize: RachaType.headline,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: RachaTokens.space2),
-            Text(l10n.privacyLeaveCoupleWarning,
-                style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              l10n.privacyLeaveCoupleWarning,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
             const SizedBox(height: RachaTokens.space5),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: scheme.error),
@@ -73,12 +74,13 @@ class ProfileScreen extends ConsumerWidget {
     );
     if (confirmed != true) return;
     try {
-      await ref.read(privacyRepositoryProvider).leaveCouple();
+      await ref.read(privacyControllerProvider.notifier).leaveCouple();
       if (context.mounted) context.go('/couple/setup');
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.commonSomethingWentWrong)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.commonSomethingWentWrong)));
       }
     }
   }
@@ -89,7 +91,8 @@ class ProfileScreen extends ConsumerWidget {
     final async = ref.watch(overviewProvider);
     final coupleView = ref.watch(coupleMeProvider).valueOrNull;
     final me = ref.watch(meProvider).valueOrNull;
-    final coupleName = coupleView?.couple.name ?? me?.coupleName ?? l10n.profileTitle;
+    final coupleName =
+        coupleView?.couple.name ?? me?.coupleName ?? l10n.profileTitle;
 
     return Scaffold(
       body: async.when(
@@ -119,11 +122,14 @@ class ProfileScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(RachaTokens.space4),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: RachaTokens.brM,
                         border: Border.all(
-                            color: Theme.of(context).colorScheme.outlineVariant,
-                            width: RachaTokens.borderHairline),
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                          width: RachaTokens.borderHairline,
+                        ),
                       ),
                       child: _MonthBars(months: ov.datesByMonth),
                     ),
@@ -131,59 +137,74 @@ class ProfileScreen extends ConsumerWidget {
 
                     SectionLabel(l10n.profileCoupleSettings),
                     const SizedBox(height: RachaTokens.space3),
-                    SettingsGroup(children: [
-                      _InfoRow(
-                        label: l10n.profileCoupleNameRow,
-                        value: coupleView?.couple.name ?? coupleName,
+                    SettingsGroup(
+                      children: [
+                        _InfoRow(
+                          label: l10n.profileCoupleNameRow,
+                          value: coupleView?.couple.name ?? coupleName,
+                        ),
+                        _InfoRow(
+                          label: l10n.profileTimezone,
+                          value: coupleView?.couple.timezone ?? '—',
+                        ),
+                        if (coupleView?.couple.inviteCode != null)
+                          _InviteRow(code: coupleView!.couple.inviteCode!),
+                      ],
+                    ),
+                    const SizedBox(height: RachaTokens.space2),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: RachaTokens.space2,
                       ),
-                      _InfoRow(
-                        label: l10n.profileTimezone,
-                        value: coupleView?.couple.timezone ?? '—',
+                      child: Text(
+                        l10n.coupleWeekCloseNote,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      _InfoRow(
-                        label: l10n.profileWeekStart,
-                        value: _weekStartLabel(l10n, coupleView?.couple.weekStart),
-                      ),
-                      if (coupleView?.couple.inviteCode != null)
-                        _InviteRow(code: coupleView!.couple.inviteCode!),
-                    ]),
+                    ),
                     const SizedBox(height: RachaTokens.space6),
 
                     SectionLabel(l10n.profileMyAccount),
                     const SizedBox(height: RachaTokens.space3),
-                    SettingsGroup(children: [
-                      SettingsRow(
-                        icon: Icons.manage_accounts_outlined,
-                        label: l10n.profileEditProfile,
-                        onTap: () => context.push('/account'),
-                      ),
-                      SettingsRow(
-                        icon: Icons.emoji_events_outlined,
-                        label: l10n.milestonesTitle,
-                        onTap: () => context.push('/milestones'),
-                      ),
-                      SettingsRow(
-                        icon: Icons.auto_awesome_outlined,
-                        label: l10n.wrappedEntry,
-                        onTap: () => context.push('/wrapped'),
-                      ),
-                      SettingsRow(
-                        icon: Icons.notifications_outlined,
-                        label: l10n.accountNotifications,
-                        onTap: () => context.push('/profile/notifications'),
-                      ),
-                      SettingsRow(
-                        icon: Icons.lock_outline,
-                        label: l10n.privacyTitle,
-                        onTap: () => context.push('/profile/privacy'),
-                      ),
-                      SettingsRow(
-                        icon: Icons.translate_outlined,
-                        label: l10n.settingsLanguage,
-                        value: languageLabel(l10n, ref.watch(localeControllerProvider)),
-                        onTap: () => context.push('/profile/language'),
-                      ),
-                    ]),
+                    SettingsGroup(
+                      children: [
+                        SettingsRow(
+                          icon: Icons.manage_accounts_outlined,
+                          label: l10n.profileEditProfile,
+                          onTap: () => context.push('/account'),
+                        ),
+                        SettingsRow(
+                          icon: Icons.emoji_events_outlined,
+                          label: l10n.milestonesTitle,
+                          onTap: () => context.push('/milestones'),
+                        ),
+                        SettingsRow(
+                          icon: Icons.auto_awesome_outlined,
+                          label: l10n.wrappedEntry,
+                          onTap: () => context.push('/wrapped'),
+                        ),
+                        SettingsRow(
+                          icon: Icons.notifications_outlined,
+                          label: l10n.accountNotifications,
+                          onTap: () => context.push('/profile/notifications'),
+                        ),
+                        SettingsRow(
+                          icon: Icons.lock_outline,
+                          label: l10n.privacyTitle,
+                          onTap: () => context.push('/profile/privacy'),
+                        ),
+                        SettingsRow(
+                          icon: Icons.translate_outlined,
+                          label: l10n.settingsLanguage,
+                          value: languageLabel(
+                            l10n,
+                            ref.watch(localeControllerProvider),
+                          ),
+                          onTap: () => context.push('/profile/language'),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: RachaTokens.space6),
 
                     SettingsGroup(
@@ -203,7 +224,9 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: RachaTokens.space7 + RachaTokens.space5),
+                    const SizedBox(
+                      height: RachaTokens.space7 + RachaTokens.space5,
+                    ),
                   ],
                 ),
               ),
@@ -213,16 +236,14 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
-
-  static String _weekStartLabel(AppLocalizations l10n, String? code) => switch (code) {
-        'sunday' => l10n.weekStartSunday,
-        'monday' => l10n.weekStartMonday,
-        _ => l10n.weekStartMonday,
-      };
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.coupleName, required this.overview, required this.members});
+  const _Header({
+    required this.coupleName,
+    required this.overview,
+    required this.members,
+  });
   final String coupleName;
   final Overview overview;
   final List<CoupleMember> members;
@@ -232,7 +253,10 @@ class _Header extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final white70 = Colors.white.withValues(alpha: 0.7);
     final white50 = Colors.white.withValues(alpha: 0.5);
-    final names = members.map((m) => m.displayName).where((n) => n.isNotEmpty).toList();
+    final names = members
+        .map((m) => m.displayName)
+        .where((n) => n.isNotEmpty)
+        .toList();
 
     return Container(
       decoration: const BoxDecoration(
@@ -245,8 +269,12 @@ class _Header extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(RachaTokens.space5, RachaTokens.space4,
-              RachaTokens.space5, RachaTokens.space6),
+          padding: const EdgeInsets.fromLTRB(
+            RachaTokens.space5,
+            RachaTokens.space4,
+            RachaTokens.space5,
+            RachaTokens.space6,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -259,23 +287,26 @@ class _Header extends StatelessWidget {
                         Text(
                           l10n.profileYourCouple.toUpperCase(),
                           style: TextStyle(
-                              color: white50,
-                              fontSize: RachaType.micro,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1),
+                            color: white50,
+                            fontSize: RachaType.micro,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           coupleName,
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: RachaType.title,
-                              fontWeight: FontWeight.w900),
+                            color: Colors.white,
+                            fontSize: RachaType.title,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
+                    tooltip: l10n.profileMyAccount,
                     onPressed: () => context.push('/account'),
                     icon: const Icon(Icons.person_outline, color: Colors.white),
                     style: IconButton.styleFrom(
@@ -296,21 +327,33 @@ class _Header extends StatelessWidget {
                         child: Text(
                           names[i].characters.first.toUpperCase(),
                           style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.w800),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ),
-                  if (names.isNotEmpty) const SizedBox(width: RachaTokens.space3),
+                  if (names.isNotEmpty)
+                    const SizedBox(width: RachaTokens.space3),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (names.isNotEmpty)
-                          Text(names.take(2).join(' & '),
-                              style: const TextStyle(
-                                  color: Colors.white, fontWeight: FontWeight.w700)),
-                        Text(l10n.profileTogether(overview.daysTogether),
-                            style: TextStyle(color: white70, fontSize: RachaType.caption)),
+                          Text(
+                            names.take(2).join(' & '),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        Text(
+                          l10n.profileTogether(overview.daysTogether),
+                          style: TextStyle(
+                            color: white70,
+                            fontSize: RachaType.caption,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -319,16 +362,22 @@ class _Header extends StatelessWidget {
               const SizedBox(height: RachaTokens.space5),
               Row(
                 children: [
-                  _HeaderStat(value: '${overview.totalDates}', label: l10n.profileStatDates),
                   _HeaderStat(
-                      value: l10n.wrappedWeeksShort(overview.currentStreak),
-                      label: l10n.profileStatStreak),
+                    value: '${overview.totalDates}',
+                    label: l10n.profileStatDates,
+                  ),
                   _HeaderStat(
-                      value: l10n.wrappedWeeksShort(overview.longestStreak),
-                      label: l10n.profileStatRecord),
+                    value: l10n.wrappedWeeksShort(overview.currentStreak),
+                    label: l10n.profileStatStreak,
+                  ),
                   _HeaderStat(
-                      value: _shortMonth(overview.bestMonth),
-                      label: l10n.profileStatBestMonth),
+                    value: l10n.wrappedWeeksShort(overview.longestStreak),
+                    label: l10n.profileStatRecord,
+                  ),
+                  _HeaderStat(
+                    value: _shortMonth(overview.bestMonth),
+                    label: l10n.profileStatBestMonth,
+                  ),
                 ],
               ),
             ],
@@ -363,24 +412,29 @@ class _HeaderStat extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: RachaType.body,
-                    fontWeight: FontWeight.w900)),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: RachaType.body,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
             const SizedBox(height: 1),
-            Text(label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: RachaType.micro)),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: RachaType.micro,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.label, required this.value});
@@ -392,16 +446,27 @@ class _InfoRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(
-          horizontal: RachaTokens.space4, vertical: RachaTokens.space3),
+        horizontal: RachaTokens.space4,
+        vertical: RachaTokens.space3,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: RachaType.callout, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: RachaType.callout,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(value,
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+          Text(
+            value,
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontSize: RachaType.caption,
+            ),
+          ),
         ],
       ),
     );
@@ -418,33 +483,44 @@ class _InviteRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(
-          horizontal: RachaTokens.space4, vertical: RachaTokens.space3),
+        horizontal: RachaTokens.space4,
+        vertical: RachaTokens.space3,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.profileInviteCode,
-              style: const TextStyle(
-                  fontSize: RachaType.callout, fontWeight: FontWeight.w600)),
+          Text(
+            l10n.profileInviteCode,
+            style: const TextStyle(
+              fontSize: RachaType.callout,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: RachaTokens.space2),
           Row(
             children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: RachaTokens.space3,
+                  ),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerHighest,
                     borderRadius: RachaTokens.brS,
                     border: Border.all(
-                        color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                      color: scheme.outlineVariant,
+                      width: RachaTokens.borderHairline,
+                    ),
                   ),
                   child: Text(
                     code,
                     style: TextStyle(
-                        color: scheme.primary,
-                        fontSize: RachaType.headline,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 4),
+                      color: scheme.primary,
+                      fontSize: RachaType.headline,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4,
+                    ),
                   ),
                 ),
               ),
@@ -452,8 +528,9 @@ class _InviteRow extends StatelessWidget {
               FilledButton.tonalIcon(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: code));
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text(l10n.profileCopied)));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(l10n.profileCopied)));
                 },
                 icon: const Icon(Icons.copy, size: 16),
                 label: Text(l10n.profileCopy),
@@ -466,7 +543,6 @@ class _InviteRow extends StatelessWidget {
   }
 }
 
-
 class _MonthBars extends StatelessWidget {
   const _MonthBars({required this.months});
   final List<({String month, int count})> months;
@@ -478,8 +554,10 @@ class _MonthBars extends StatelessWidget {
       return SizedBox(
         height: 90,
         child: Center(
-          child: Text(AppLocalizations.of(context).summaryEmpty,
-              style: TextStyle(color: scheme.onSurfaceVariant)),
+          child: Text(
+            AppLocalizations.of(context).summaryEmpty,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
         ),
       );
     }
@@ -496,7 +574,10 @@ class _MonthBars extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text('${months[i].count}', style: const TextStyle(fontSize: RachaType.micro)),
+                    Text(
+                      '${months[i].count}',
+                      style: const TextStyle(fontSize: RachaType.micro),
+                    ),
                     const SizedBox(height: 2),
                     Container(
                       height: 74 * (months[i].count / maxCount),
@@ -504,7 +585,9 @@ class _MonthBars extends StatelessWidget {
                         color: i == months.length - 1
                             ? scheme.primary
                             : scheme.primaryContainer,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),

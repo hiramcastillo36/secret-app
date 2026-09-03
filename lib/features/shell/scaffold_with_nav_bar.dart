@@ -31,24 +31,42 @@ class ScaffoldWithNavBar extends StatelessWidget {
       return Expanded(
         child: InkWell(
           onTap: () => _goBranch(index),
-          child: SizedBox(
-            height: 56,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(selected ? activeIcon : icon,
+          child: Semantics(
+            selected: selected,
+            button: true,
+            label: label,
+            child: Padding(
+              // Sizes to content rather than a fixed 56px box, so the row grows
+              // with the user's text size instead of clipping the label.
+              padding: const EdgeInsets.symmetric(vertical: RachaTokens.space2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selected ? activeIcon : icon,
                     size: 24,
-                    color: selected ? scheme.primary : scheme.onSurfaceVariant),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: RachaType.micro,
-                    fontWeight: FontWeight.w600,
                     color: selected ? scheme.primary : scheme.onSurfaceVariant,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  // Nav labels track the user's text size but stop scaling near
+                  // 1.3x, the same ceiling Material's own NavigationBar uses.
+                  MediaQuery.withClampedTextScaling(
+                    maxScaleFactor: 1.3,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: RachaType.micro,
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -64,7 +82,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        height: 64,
+        // No fixed height — it fits the tabs, which grow with the text size.
         padding: EdgeInsets.zero,
         color: scheme.surface,
         surfaceTintColor: Colors.transparent,

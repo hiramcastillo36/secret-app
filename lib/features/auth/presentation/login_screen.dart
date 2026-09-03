@@ -31,10 +31,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     setState(() => _submitted = true);
     if (!_formKey.currentState!.validate()) return;
-    final session = await ref.read(authControllerProvider.notifier).login(
-          email: _email.text.trim(),
-          password: _password.text,
-        );
+    final session = await ref
+        .read(authControllerProvider.notifier)
+        .login(email: _email.text.trim(), password: _password.text);
     if (!mounted || session == null) return;
     context.go('/splash');
   }
@@ -80,9 +79,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _password,
                       obscureText: true,
                       autofillHints: const [AutofillHints.password],
-                      decoration: InputDecoration(labelText: l10n.commonPassword),
-                      validator: (v) =>
-                          (v ?? '').isEmpty ? l10n.validationPasswordRequired : null,
+                      decoration: InputDecoration(
+                        labelText: l10n.commonPassword,
+                      ),
+                      validator: (v) => (v ?? '').isEmpty
+                          ? l10n.validationPasswordRequired
+                          : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     Align(
@@ -90,9 +92,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: TextButton(
                         onPressed: () => context.push('/auth/forgot-password'),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: RachaTokens.space2),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: RachaTokens.space2,
+                          ),
                         ),
                         child: Text(l10n.loginForgotPassword),
                       ),
@@ -104,12 +106,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: RachaTokens.space4),
                     FilledButton(
                       onPressed: loading ? null : _submit,
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
                       child: loading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : Text(l10n.loginSubmit),
                     ),
                     const SizedBox(height: RachaTokens.space2),
@@ -140,7 +145,10 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.errorContainer,
         borderRadius: RachaTokens.brS,
-        border: Border.all(color: scheme.error, width: RachaTokens.borderHairline),
+        border: Border.all(
+          color: scheme.error,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       child: Text(text, style: TextStyle(color: scheme.onErrorContainer)),
     );

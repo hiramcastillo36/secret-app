@@ -26,24 +26,36 @@ class FieldTile extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: RachaTokens.brS,
-        side: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+        side: BorderSide(
+          color: scheme.outlineVariant,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-              horizontal: RachaTokens.space4, vertical: RachaTokens.space3),
+            horizontal: RachaTokens.space4,
+            vertical: RachaTokens.space3,
+          ),
           child: Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label,
-                        style: TextStyle(
-                            color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: RachaType.caption,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                      value,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ],
                 ),
               ),
@@ -59,7 +71,12 @@ class FieldTile extends StatelessWidget {
 /// The soft explanatory panel used across the streak flows. [tone] "warning"
 /// tints it amber; the default is a neutral surface.
 class NoteBox extends StatelessWidget {
-  const NoteBox({super.key, required this.child, this.tone = 'neutral', this.icon});
+  const NoteBox({
+    super.key,
+    required this.child,
+    this.tone = 'neutral',
+    this.icon,
+  });
 
   final Widget child;
   final String tone; // neutral | warning
@@ -71,7 +88,9 @@ class NoteBox extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final warning = tone == 'warning';
     final bg = warning
-        ? (dark ? RachaTokens.atRiskDark : RachaTokens.atRiskLight).withValues(alpha: 0.14)
+        ? (dark ? RachaTokens.atRiskDark : RachaTokens.atRiskLight).withValues(
+            alpha: 0.14,
+          )
         : scheme.surfaceContainerHighest;
     final fg = warning
         ? (dark ? RachaTokens.atRiskDark : RachaTokens.atRiskLight)
@@ -83,7 +102,10 @@ class NoteBox extends StatelessWidget {
         borderRadius: RachaTokens.brM,
         border: warning
             ? null
-            : Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+            : Border.all(
+                color: scheme.outlineVariant,
+                width: RachaTokens.borderHairline,
+              ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +116,11 @@ class NoteBox extends StatelessWidget {
           ],
           Expanded(
             child: DefaultTextStyle.merge(
-              style: TextStyle(color: fg, fontSize: RachaType.caption, height: 1.4),
+              style: TextStyle(
+                color: fg,
+                fontSize: RachaType.caption,
+                height: 1.4,
+              ),
               child: child,
             ),
           ),

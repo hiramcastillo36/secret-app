@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/format/money.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../data/dates_repository.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
 
@@ -49,12 +50,19 @@ class SummaryScreen extends ConsumerWidget {
                     _TotalsRow(summary: s),
                     if (s.favoritePlace != null) ...[
                       const SizedBox(height: RachaTokens.space3),
-                      Text(l10n.summaryFavorite(s.favoritePlace!),
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text(
+                        l10n.summaryFavorite(s.favoritePlace!),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                     ],
                     const SizedBox(height: RachaTokens.space6),
-                    Text(l10n.summaryByCategory,
-                        style: const TextStyle(fontSize: RachaType.headline, fontWeight: FontWeight.w700)),
+                    Text(
+                      l10n.summaryByCategory,
+                      style: const TextStyle(
+                        fontSize: RachaType.headline,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: RachaTokens.space3),
                     for (final c in s.byCategory) _CategoryBar(stat: c),
                     const SizedBox(height: RachaTokens.space6),
@@ -76,9 +84,18 @@ class _TotalsRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Row(
       children: [
-        _Stat(value: '${summary.distinctPlaces}', label: l10n.summaryDistinctPlaces),
+        _Stat(
+          value: '${summary.distinctPlaces}',
+          label: l10n.summaryDistinctPlaces,
+        ),
         _Stat(value: '${summary.totalVisits}', label: l10n.summaryTotalVisits),
-        _Stat(value: '\$${summary.totalCost.toStringAsFixed(0)}', label: l10n.summaryTotalCost),
+        _Stat(
+          value: formatMoneyByCurrency(
+            summary.costByCurrency,
+            locale: Localizations.localeOf(context).toString(),
+          ),
+          label: l10n.summaryTotalCost,
+        ),
       ],
     );
   }
@@ -94,8 +111,20 @@ class _Stat extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Text(value, style: const TextStyle(fontSize: RachaType.headline, fontWeight: FontWeight.w800)),
-          Text(label, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: RachaType.headline,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontSize: RachaType.caption,
+            ),
+          ),
         ],
       ),
     );
@@ -109,33 +138,50 @@ class _CategoryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: RachaTokens.space3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(children: [
-                Icon(categoryIcon(stat.category), size: 16, color: scheme.onSurfaceVariant),
-                const SizedBox(width: RachaTokens.space2),
-                Text(stat.category),
-              ]),
-              Text('${stat.percentage.round()}%',
-                  style: TextStyle(color: scheme.onSurfaceVariant)),
-            ],
-          ),
-          const SizedBox(height: RachaTokens.space1),
-          ClipRRect(
-            borderRadius: RachaTokens.brS,
-            child: LinearProgressIndicator(
-              value: (stat.percentage / 100).clamp(0, 1),
-              minHeight: 8,
-              backgroundColor: scheme.surfaceContainerHighest,
+    final l10n = AppLocalizations.of(context);
+    return Semantics(
+      container: true,
+      excludeSemantics: true,
+      label: l10n.a11yCategoryShare(
+        stat.category,
+        '${stat.percentage.round()}',
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: RachaTokens.space3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      categoryIcon(stat.category),
+                      size: 16,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: RachaTokens.space2),
+                    Text(stat.category),
+                  ],
+                ),
+                Text(
+                  '${stat.percentage.round()}%',
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: RachaTokens.space1),
+            ClipRRect(
+              borderRadius: RachaTokens.brS,
+              child: LinearProgressIndicator(
+                value: (stat.percentage / 100).clamp(0, 1),
+                minHeight: 8,
+                backgroundColor: scheme.surfaceContainerHighest,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -154,11 +200,16 @@ class _PlaceTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: RachaTokens.brM,
-        border: Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+        border: Border.all(
+          color: scheme.outlineVariant,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: stat.placeId.isEmpty ? null : () => context.push('/places/${stat.placeId}'),
+        onTap: stat.placeId.isEmpty
+            ? null
+            : () => context.push('/places/${stat.placeId}'),
         child: Padding(
           padding: const EdgeInsets.all(RachaTokens.space3),
           child: Row(
@@ -169,18 +220,27 @@ class _PlaceTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(stat.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text(l10n.summaryVisitsCount(stat.visits),
-                        style: TextStyle(
-                            color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                    Text(
+                      stat.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      l10n.summaryVisitsCount(stat.visits),
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: RachaType.caption,
+                      ),
+                    ),
                   ],
                 ),
               ),
               if (stat.avgRating != null)
-                Row(children: [
-                  const Icon(Icons.star, size: 14),
-                  Text(' ${stat.avgRating!.toStringAsFixed(1)}'),
-                ]),
+                Row(
+                  children: [
+                    const Icon(Icons.star, size: 14),
+                    Text(' ${stat.avgRating!.toStringAsFixed(1)}'),
+                  ],
+                ),
             ],
           ),
         ),
@@ -194,9 +254,9 @@ class _Empty extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(RachaTokens.space7),
-          child: Text(text, textAlign: TextAlign.center),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(RachaTokens.space7),
+      child: Text(text, textAlign: TextAlign.center),
+    ),
+  );
 }

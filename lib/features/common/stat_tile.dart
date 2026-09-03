@@ -20,7 +20,10 @@ class StatTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest,
           borderRadius: RachaTokens.brM,
-          border: Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          border: Border.all(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
         child: Column(
           children: [
@@ -36,7 +39,10 @@ class StatTile extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: RachaType.caption),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: RachaType.caption,
+              ),
             ),
           ],
         ),

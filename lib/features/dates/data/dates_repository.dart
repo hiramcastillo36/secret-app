@@ -20,24 +20,34 @@ class DatesRepository {
 
   Future<PlaceSearch> searchPlaces(String q, {double? lat, double? lng}) async {
     try {
-      final res = await _dio.get<Map<String, dynamic>>('/places/search', queryParameters: {
-        'q': q,
-        if (lat != null) 'lat': lat,
-        if (lng != null) 'lng': lng,
-      });
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/places/search',
+        queryParameters: {
+          'q': q,
+          if (lat != null) 'lat': lat,
+          if (lng != null) 'lng': lng,
+        },
+      );
       return PlaceSearch.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
   }
 
-  Future<DatesPage> list({String? cursor, int limit = 20, String? placeId}) async {
+  Future<DatesPage> list({
+    String? cursor,
+    int limit = 20,
+    String? placeId,
+  }) async {
     try {
-      final res = await _dio.get<Map<String, dynamic>>('/dates', queryParameters: {
-        if (cursor != null) 'cursor': cursor,
-        'limit': limit,
-        if (placeId != null) 'place_id': placeId,
-      });
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/dates',
+        queryParameters: {
+          if (cursor != null) 'cursor': cursor,
+          'limit': limit,
+          if (placeId != null) 'place_id': placeId,
+        },
+      );
       return DatesPage.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -47,7 +57,9 @@ class DatesRepository {
   Future<DateEntry> get(String id) async {
     try {
       final res = await _dio.get<Map<String, dynamic>>('/dates/$id');
-      return DateEntry.fromJson((res.data!['date'] as Map).cast<String, dynamic>());
+      return DateEntry.fromJson(
+        (res.data!['date'] as Map).cast<String, dynamic>(),
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -60,6 +72,7 @@ class DatesRepository {
     String? notes,
     int? rating,
     double? cost,
+    String? currency,
     List<String>? participantIds,
     String? idempotencyKey,
   }) async {
@@ -73,11 +86,14 @@ class DatesRepository {
           if (notes != null && notes.isNotEmpty) 'notes': notes,
           if (rating != null) 'rating': rating,
           if (cost != null) 'cost': cost,
+          if (currency != null) 'currency': currency,
           if (participantIds != null) 'participant_ids': participantIds,
         },
-        options: Options(headers: {
-          if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
-        }),
+        options: Options(
+          headers: {
+            if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
+          },
+        ),
       );
       return CreateDateResult.fromJson(res.data!);
     } on DioException catch (e) {
@@ -94,14 +110,20 @@ class DatesRepository {
     List<String>? participantIds,
   }) async {
     try {
-      final res = await _dio.patch<Map<String, dynamic>>('/dates/$id', data: {
-        if (title != null) 'title': title,
-        if (happenedAt != null) 'happened_at': happenedAt.toUtc().toIso8601String(),
-        if (notes != null) 'notes': notes,
-        if (rating != null) 'rating': rating,
-        if (participantIds != null) 'participant_ids': participantIds,
-      });
-      return DateEntry.fromJson((res.data!['date'] as Map).cast<String, dynamic>());
+      final res = await _dio.patch<Map<String, dynamic>>(
+        '/dates/$id',
+        data: {
+          if (title != null) 'title': title,
+          if (happenedAt != null)
+            'happened_at': happenedAt.toUtc().toIso8601String(),
+          if (notes != null) 'notes': notes,
+          if (rating != null) 'rating': rating,
+          if (participantIds != null) 'participant_ids': participantIds,
+        },
+      );
+      return DateEntry.fromJson(
+        (res.data!['date'] as Map).cast<String, dynamic>(),
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -122,11 +144,14 @@ class DatesRepository {
     DateTime? to,
   }) async {
     try {
-      final res = await _dio.get<Map<String, dynamic>>('/summary/places', queryParameters: {
-        'sort': sort,
-        if (from != null) 'from': from.toUtc().toIso8601String(),
-        if (to != null) 'to': to.toUtc().toIso8601String(),
-      });
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/summary/places',
+        queryParameters: {
+          'sort': sort,
+          if (from != null) 'from': from.toUtc().toIso8601String(),
+          if (to != null) 'to': to.toUtc().toIso8601String(),
+        },
+      );
       return PlacesSummary.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -135,8 +160,10 @@ class DatesRepository {
 
   Future<Overview> summaryOverview({int? year}) async {
     try {
-      final res = await _dio.get<Map<String, dynamic>>('/summary/overview',
-          queryParameters: {if (year != null) 'year': year});
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/summary/overview',
+        queryParameters: {if (year != null) 'year': year},
+      );
       return Overview.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -166,8 +193,10 @@ final overviewProvider = FutureProvider.autoDispose<Overview>((ref) {
   return ref.watch(datesRepositoryProvider).summaryOverview();
 });
 
-final dateByIdProvider =
-    FutureProvider.autoDispose.family<DateEntry, String>((ref, id) {
+final dateByIdProvider = FutureProvider.autoDispose.family<DateEntry, String>((
+  ref,
+  id,
+) {
   return ref.watch(datesRepositoryProvider).get(id);
 });
 
@@ -175,18 +204,21 @@ final dateByIdProvider =
 /// `/summary/places` plus every date logged there. There is no dedicated
 /// place-detail endpoint, so this composes the two reads the app already has.
 final placeDetailProvider = FutureProvider.autoDispose
-    .family<({PlaceStat? stat, List<DateEntry> dates}), String>((ref, placeId) async {
-  final repo = ref.watch(datesRepositoryProvider);
-  final (summary, page) = await (
-    repo.summaryPlaces(),
-    repo.list(placeId: placeId, limit: 50),
-  ).wait;
-  PlaceStat? stat;
-  for (final p in summary.places) {
-    if (p.placeId == placeId) {
-      stat = p;
-      break;
-    }
-  }
-  return (stat: stat, dates: page.dates);
-});
+    .family<({PlaceStat? stat, List<DateEntry> dates}), String>((
+      ref,
+      placeId,
+    ) async {
+      final repo = ref.watch(datesRepositoryProvider);
+      final (summary, page) = await (
+        repo.summaryPlaces(),
+        repo.list(placeId: placeId, limit: 50),
+      ).wait;
+      PlaceStat? stat;
+      for (final p in summary.places) {
+        if (p.placeId == placeId) {
+          stat = p;
+          break;
+        }
+      }
+      return (stat: stat, dates: page.dates);
+    });

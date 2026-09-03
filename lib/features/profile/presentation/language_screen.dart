@@ -50,7 +50,8 @@ class LanguageScreen extends ConsumerWidget {
 }
 
 /// Label for the active choice, used by the "Language" row in My account.
-String languageLabel(AppLocalizations l10n, Locale? choice) => switch (choice?.languageCode) {
+String languageLabel(AppLocalizations l10n, Locale? choice) =>
+    switch (choice?.languageCode) {
       'es' => l10n.languageSpanish,
       'en' => l10n.languageEnglish,
       _ => l10n.languageAutomatic,

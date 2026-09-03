@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../data/privacy_repository.dart';
+import '../application/privacy.dart';
 
 /// /profile/privacy — the handful of switches that change what the app shares,
 /// plus the account-level exits (export, leave couple, delete account). Each
@@ -22,14 +22,16 @@ class PrivacyScreen extends ConsumerWidget {
 
     Future<void> save(Map<String, dynamic> changes) async {
       try {
-        await ref.read(privacyRepositoryProvider).patch(changes);
-        ref.invalidate(privacySettingsProvider);
+        await ref.read(privacyControllerProvider.notifier).save(changes);
       } on ApiException catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.isNetwork ? l10n.commonNoConnection : e.message)),
+            SnackBar(
+              content: Text(e.isNetwork ? l10n.commonNoConnection : e.message),
+            ),
           );
         }
+        // Refetch so a Cupertino switch that already animated snaps back.
         ref.invalidate(privacySettingsProvider);
       }
     }
@@ -88,12 +90,18 @@ class PrivacyScreen extends ConsumerWidget {
             ),
             ListTile(
               leading: Icon(Icons.link_off, color: scheme.error),
-              title: Text(l10n.privacyLeaveCouple, style: TextStyle(color: scheme.error)),
+              title: Text(
+                l10n.privacyLeaveCouple,
+                style: TextStyle(color: scheme.error),
+              ),
               onTap: () => _leaveCouple(context, ref),
             ),
             ListTile(
               leading: Icon(Icons.delete_outline, color: scheme.error),
-              title: Text(l10n.accountDeleteTitle, style: TextStyle(color: scheme.error)),
+              title: Text(
+                l10n.accountDeleteTitle,
+                style: TextStyle(color: scheme.error),
+              ),
               subtitle: Text(l10n.privacyDeleteSub),
               onTap: () => context.push('/account'),
             ),
@@ -106,14 +114,17 @@ class PrivacyScreen extends ConsumerWidget {
   Future<void> _exportData(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     try {
-      await ref.read(privacyRepositoryProvider).requestDataExport();
+      await ref.read(privacyControllerProvider.notifier).requestDataExport();
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.privacyExportQueued)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.privacyExportQueued)));
       }
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -129,11 +140,18 @@ class PrivacyScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.privacyLeaveCouple,
-                style: const TextStyle(fontSize: RachaType.headline, fontWeight: FontWeight.w700)),
+            Text(
+              l10n.privacyLeaveCouple,
+              style: const TextStyle(
+                fontSize: RachaType.headline,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: RachaTokens.space2),
-            Text(l10n.privacyLeaveCoupleWarning,
-                style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              l10n.privacyLeaveCoupleWarning,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
             const SizedBox(height: RachaTokens.space5),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: scheme.error),
@@ -151,11 +169,13 @@ class PrivacyScreen extends ConsumerWidget {
     );
     if (confirmed != true) return;
     try {
-      await ref.read(privacyRepositoryProvider).leaveCouple();
+      await ref.read(privacyControllerProvider.notifier).leaveCouple();
       if (context.mounted) context.go('/couple/setup');
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }

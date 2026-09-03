@@ -17,24 +17,30 @@ class AuthRepository {
     String? timezone,
   }) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/auth/register', data: {
-        'email': email,
-        'password': password,
-        'display_name': displayName,
-        if (timezone != null) 'timezone': timezone,
-      });
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/auth/register',
+        data: {
+          'email': email,
+          'password': password,
+          'display_name': displayName,
+          if (timezone != null) 'timezone': timezone,
+        },
+      );
       return AuthSession.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
   }
 
-  Future<AuthSession> login({required String email, required String password}) async {
+  Future<AuthSession> login({
+    required String email,
+    required String password,
+  }) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/auth/login', data: {
-        'email': email,
-        'password': password,
-      });
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/auth/login',
+        data: {'email': email, 'password': password},
+      );
       return AuthSession.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -58,10 +64,15 @@ class AuthRepository {
     }
   }
 
-  Future<void> resetPassword({required String token, required String newPassword}) async {
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
     try {
-      await _dio.post<void>('/auth/password/reset',
-          data: {'token': token, 'new_password': newPassword});
+      await _dio.post<void>(
+        '/auth/password/reset',
+        data: {'token': token, 'new_password': newPassword},
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -70,7 +81,9 @@ class AuthRepository {
   /// Returns retry_after seconds.
   Future<int> sendEmailVerification() async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/auth/email/verify/send');
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/auth/email/verify/send',
+      );
       return (res.data?['retry_after'] ?? 60) as int;
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -92,11 +105,14 @@ class AuthRepository {
     String? reason,
   }) async {
     try {
-      final res = await _dio.delete<Map<String, dynamic>>('/me', data: {
-        'confirmation': confirmation,
-        if (password != null && password.isNotEmpty) 'password': password,
-        if (reason != null && reason.isNotEmpty) 'reason': reason,
-      });
+      final res = await _dio.delete<Map<String, dynamic>>(
+        '/me',
+        data: {
+          'confirmation': confirmation,
+          if (password != null && password.isNotEmpty) 'password': password,
+          if (reason != null && reason.isNotEmpty) 'reason': reason,
+        },
+      );
       return DateTime.parse(res.data!['scheduled_for'] as String);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -108,6 +124,19 @@ class AuthRepository {
       await _dio.post<void>('/me/deletion/cancel');
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
+    }
+  }
+
+  /// Revokes the refresh token server-side. Best effort — local sign-out
+  /// proceeds regardless — so a failure is swallowed rather than thrown.
+  Future<void> logout(String refreshToken) async {
+    try {
+      await _dio.post<void>(
+        '/auth/logout',
+        data: {'refresh_token': refreshToken},
+      );
+    } on DioException catch (_) {
+      // ignore: the caller clears local state anyway
     }
   }
 }

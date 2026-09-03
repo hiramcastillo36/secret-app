@@ -11,8 +11,9 @@ String isoWeekKey(DateTime d) {
   final monBased = (date.weekday + 6) % 7; // Mon=0 … Sun=6
   final thursday = date.add(Duration(days: 3 - monBased));
   final firstThursday = DateTime(thursday.year, 1, 4);
-  final week1Monday =
-      firstThursday.subtract(Duration(days: (firstThursday.weekday + 6) % 7));
+  final week1Monday = firstThursday.subtract(
+    Duration(days: (firstThursday.weekday + 6) % 7),
+  );
   final weekNum = (thursday.difference(week1Monday).inDays ~/ 7) + 1;
   return '${thursday.year.toString().padLeft(4, '0')}-W${weekNum.toString().padLeft(2, '0')}';
 }
@@ -33,12 +34,12 @@ class ActiveFreeze {
   final String createdBy;
 
   factory ActiveFreeze.fromJson(Map<String, dynamic> j) => ActiveFreeze(
-        id: j['id'] as String,
-        reason: (j['reason'] ?? 'other') as String,
-        startsWeekKey: (j['starts_week_key'] ?? '') as String,
-        endsWeekKey: (j['ends_week_key'] ?? '') as String,
-        createdBy: (j['created_by'] ?? '') as String,
-      );
+    id: j['id'] as String,
+    reason: (j['reason'] ?? 'other') as String,
+    startsWeekKey: (j['starts_week_key'] ?? '') as String,
+    endsWeekKey: (j['ends_week_key'] ?? '') as String,
+    createdBy: (j['created_by'] ?? '') as String,
+  );
 }
 
 class PendingRepair {
@@ -60,12 +61,12 @@ class PendingRepair {
   final String requestedAt;
 
   factory PendingRepair.fromJson(Map<String, dynamic> j) => PendingRepair(
-        id: j['id'] as String,
-        targetWeekKey: (j['target_week_key'] ?? '') as String,
-        requestedBy: (j['requested_by'] ?? '') as String,
-        isMine: (j['is_mine'] ?? false) as bool,
-        requestedAt: (j['requested_at'] ?? '') as String,
-      );
+    id: j['id'] as String,
+    targetWeekKey: (j['target_week_key'] ?? '') as String,
+    requestedBy: (j['requested_by'] ?? '') as String,
+    isMine: (j['is_mine'] ?? false) as bool,
+    requestedAt: (j['requested_at'] ?? '') as String,
+  );
 }
 
 class ProtectHub {
@@ -94,17 +95,19 @@ class ProtectHub {
   }
 
   factory ProtectHub.fromJson(Map<String, dynamic> j) => ProtectHub(
-        activeFreeze: j['active_freeze'] == null
-            ? null
-            : ActiveFreeze.fromJson((j['active_freeze'] as Map).cast<String, dynamic>()),
-        freezeQuotaUsed: (j['freeze_quota_used'] ?? false) as bool,
-        quotaMonth: (j['quota_month'] ?? '') as String,
-        pendingRepairs: ((j['pending_repairs'] as List?) ?? const [])
-            .map((e) => PendingRepair.fromJson((e as Map).cast<String, dynamic>()))
-            .toList(),
-        repairAvailable: (j['repair_available'] ?? false) as bool,
-        lastWeekKey: (j['last_week_key'] ?? '') as String,
-      );
+    activeFreeze: j['active_freeze'] == null
+        ? null
+        : ActiveFreeze.fromJson(
+            (j['active_freeze'] as Map).cast<String, dynamic>(),
+          ),
+    freezeQuotaUsed: (j['freeze_quota_used'] ?? false) as bool,
+    quotaMonth: (j['quota_month'] ?? '') as String,
+    pendingRepairs: ((j['pending_repairs'] as List?) ?? const [])
+        .map((e) => PendingRepair.fromJson((e as Map).cast<String, dynamic>()))
+        .toList(),
+    repairAvailable: (j['repair_available'] ?? false) as bool,
+    lastWeekKey: (j['last_week_key'] ?? '') as String,
+  );
 }
 
 class ProtectRepository {
@@ -127,11 +130,14 @@ class ProtectRepository {
     required String endsWeekKey,
   }) async {
     try {
-      await _dio.post<Map<String, dynamic>>('/streaks/freeze', data: {
-        'reason': reason,
-        'starts_week_key': startsWeekKey,
-        'ends_week_key': endsWeekKey,
-      });
+      await _dio.post<Map<String, dynamic>>(
+        '/streaks/freeze',
+        data: {
+          'reason': reason,
+          'starts_week_key': startsWeekKey,
+          'ends_week_key': endsWeekKey,
+        },
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -146,12 +152,18 @@ class ProtectRepository {
   }
 
   /// POST /streaks/repair — files a tentative date for a closed week.
-  Future<void> createRepair({required DateTime happenedAt, String? title}) async {
+  Future<void> createRepair({
+    required DateTime happenedAt,
+    String? title,
+  }) async {
     try {
-      await _dio.post<Map<String, dynamic>>('/streaks/repair', data: {
-        'happened_at': happenedAt.toUtc().toIso8601String(),
-        if (title != null && title.isNotEmpty) 'title': title,
-      });
+      await _dio.post<Map<String, dynamic>>(
+        '/streaks/repair',
+        data: {
+          'happened_at': happenedAt.toUtc().toIso8601String(),
+          if (title != null && title.isNotEmpty) 'title': title,
+        },
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -160,8 +172,10 @@ class ProtectRepository {
   /// decision: confirm | reject.
   Future<void> respondRepair(String id, String decision) async {
     try {
-      await _dio.post<Map<String, dynamic>>('/streaks/repair/$id/respond',
-          data: {'decision': decision});
+      await _dio.post<Map<String, dynamic>>(
+        '/streaks/repair/$id/respond',
+        data: {'decision': decision},
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }

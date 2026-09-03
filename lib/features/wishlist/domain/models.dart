@@ -33,33 +33,37 @@ class WishItem {
   bool get hasLocation => placeLat != null && placeLng != null;
 
   factory WishItem.fromJson(Map<String, dynamic> j) => WishItem(
-        id: j['id'] as String,
-        addedBy: (j['added_by'] ?? '') as String,
-        kind: (j['kind'] ?? 'idea') as String,
-        title: (j['title'] ?? '') as String,
-        status: (j['status'] ?? 'open') as String,
-        placeId: j['place_id'] as String?,
-        placeName: j['place_name'] as String?,
-        placeCategory: j['place_category'] as String?,
-        placeLat: (j['place_lat'] as num?)?.toDouble(),
-        placeLng: (j['place_lng'] as num?)?.toDouble(),
-        note: j['note'] as String?,
-        costBand: j['cost_band'] as String?,
-        category: j['category'] as String?,
-      );
+    id: j['id'] as String,
+    addedBy: (j['added_by'] ?? '') as String,
+    kind: (j['kind'] ?? 'idea') as String,
+    title: (j['title'] ?? '') as String,
+    status: (j['status'] ?? 'open') as String,
+    placeId: j['place_id'] as String?,
+    placeName: j['place_name'] as String?,
+    placeCategory: j['place_category'] as String?,
+    placeLat: (j['place_lat'] as num?)?.toDouble(),
+    placeLng: (j['place_lng'] as num?)?.toDouble(),
+    note: j['note'] as String?,
+    costBand: j['cost_band'] as String?,
+    category: j['category'] as String?,
+  );
 }
 
 class WishCounts {
-  const WishCounts({required this.open, required this.planned, required this.done});
+  const WishCounts({
+    required this.open,
+    required this.planned,
+    required this.done,
+  });
   final int open;
   final int planned;
   final int done;
 
   factory WishCounts.fromJson(Map<String, dynamic>? j) => WishCounts(
-        open: (j?['open'] ?? 0) as int,
-        planned: (j?['planned'] ?? 0) as int,
-        done: (j?['done'] ?? 0) as int,
-      );
+    open: (j?['open'] ?? 0) as int,
+    planned: (j?['planned'] ?? 0) as int,
+    done: (j?['done'] ?? 0) as int,
+  );
 }
 
 class WishList {
@@ -70,11 +74,11 @@ class WishList {
   List<WishItem> get open => items.where((i) => i.status == 'open').toList();
 
   factory WishList.fromJson(Map<String, dynamic> j) => WishList(
-        items: ((j['items'] as List?) ?? const [])
-            .map((e) => WishItem.fromJson((e as Map).cast<String, dynamic>()))
-            .toList(),
-        counts: WishCounts.fromJson((j['counts'] as Map?)?.cast<String, dynamic>()),
-      );
+    items: ((j['items'] as List?) ?? const [])
+        .map((e) => WishItem.fromJson((e as Map).cast<String, dynamic>()))
+        .toList(),
+    counts: WishCounts.fromJson((j['counts'] as Map?)?.cast<String, dynamic>()),
+  );
 }
 
 class Suggestion {
@@ -91,9 +95,9 @@ class Suggestion {
   final String reason;
 
   factory Suggestion.fromJson(Map<String, dynamic> j) => Suggestion(
-        placeId: (j['place_id'] ?? '') as String,
-        name: (j['name'] ?? '') as String,
-        category: (j['category'] ?? 'other') as String,
-        reason: (j['reason'] ?? '') as String,
-      );
+    placeId: (j['place_id'] ?? '') as String,
+    name: (j['name'] ?? '') as String,
+    category: (j['category'] ?? 'other') as String,
+    reason: (j['reason'] ?? '') as String,
+  );
 }

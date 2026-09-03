@@ -17,7 +17,8 @@ class Milestone {
   bool get achieved => current >= target;
 
   /// 0..1 toward [target]. 1.0 once achieved.
-  double get progress => target == 0 ? 1 : (current / target).clamp(0, 1).toDouble();
+  double get progress =>
+      target == 0 ? 1 : (current / target).clamp(0, 1).toDouble();
 
   String get id => '${kind.name}_$target';
 }

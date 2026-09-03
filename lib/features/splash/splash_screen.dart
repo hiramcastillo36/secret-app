@@ -50,8 +50,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           _goto('/home');
         case BootstrapRoute.coupleSetup:
           _goto('/couple/setup');
-        case BootstrapRoute.onboarding:
-          _goto('/onboarding');
       }
     } on ApiException catch (e) {
       if (e.status == 401) {
@@ -97,19 +95,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: RachaTokens.brL,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                    ),
                   ),
-                  child: const Icon(Icons.favorite, color: Colors.white, size: 44),
+                  child: const Icon(
+                    Icons.favorite,
+                    color: Colors.white,
+                    size: 44,
+                  ),
                 ),
                 const SizedBox(height: RachaTokens.space5),
-                Text(l10n.appTitle,
-                    style: const TextStyle(
-                        fontSize: RachaType.title,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white)),
+                Text(
+                  l10n.appTitle,
+                  style: const TextStyle(
+                    fontSize: RachaType.title,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
                 const SizedBox(height: RachaTokens.space1),
-                Text(l10n.splashTagline,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+                Text(
+                  l10n.splashTagline,
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                ),
                 const SizedBox(height: RachaTokens.space6),
                 if (_failed)
                   FilledButton(

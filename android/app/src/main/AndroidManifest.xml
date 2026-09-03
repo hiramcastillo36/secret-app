@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for all network calls. Debug/profile manifests also declare it
+         for the Flutter tooling, but release builds only get it from here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
-        android:label="racha"
+        android:label="Racha"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

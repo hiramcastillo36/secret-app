@@ -7,7 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../dates/presentation/date_format.dart';
 import '../../plans/domain/models.dart';
-import '../data/wishlist_repository.dart';
+import '../application/wishlist.dart';
 
 /// /suggestions — up to three ideas built from the couple's own history, each
 /// with a reason. Add one to the list or plan it straight away.
@@ -30,11 +30,19 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
       appBar: AppBar(
         title: Text(l10n.suggestionsTitle),
         actions: [
-          Row(children: [
-            Text(l10n.suggestionsCheap, style: const TextStyle(fontSize: RachaType.caption)),
-            Switch(value: _cheap, onChanged: (v) => setState(() => _cheap = v)),
-            const SizedBox(width: RachaTokens.space2),
-          ]),
+          Row(
+            children: [
+              Text(
+                l10n.suggestionsCheap,
+                style: const TextStyle(fontSize: RachaType.caption),
+              ),
+              Switch(
+                value: _cheap,
+                onChanged: (v) => setState(() => _cheap = v),
+              ),
+              const SizedBox(width: RachaTokens.space2),
+            ],
+          ),
         ],
       ),
       body: Column(
@@ -42,13 +50,17 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
           Expanded(
             child: async.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+              error: (_, __) =>
+                  Center(child: Text(l10n.commonSomethingWentWrong)),
               data: (list) {
                 if (list.isEmpty) {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(RachaTokens.space6),
-                      child: Text(l10n.suggestionsEmpty, textAlign: TextAlign.center),
+                      child: Text(
+                        l10n.suggestionsEmpty,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   );
                 }
@@ -58,51 +70,70 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                   children: [
                     for (final s in list)
                       Container(
-                        margin: const EdgeInsets.only(bottom: RachaTokens.space3),
+                        margin: const EdgeInsets.only(
+                          bottom: RachaTokens.space3,
+                        ),
                         padding: const EdgeInsets.all(RachaTokens.space4),
                         decoration: BoxDecoration(
                           color: scheme.surfaceContainerHighest,
                           borderRadius: RachaTokens.brM,
                           border: Border.all(
-                              color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                            color: scheme.outlineVariant,
+                            width: RachaTokens.borderHairline,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(children: [
-                              Container(
-                                height: 40,
-                                width: 40,
-                                decoration: BoxDecoration(
-                                  color: scheme.primaryContainer,
-                                  borderRadius: RachaTokens.brS,
+                            Row(
+                              children: [
+                                Container(
+                                  height: 40,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    color: scheme.primaryContainer,
+                                    borderRadius: RachaTokens.brS,
+                                  ),
+                                  child: Icon(
+                                    categoryIcon(s.category),
+                                    size: 20,
+                                    color: scheme.onPrimaryContainer,
+                                  ),
                                 ),
-                                child: Icon(categoryIcon(s.category),
-                                    size: 20, color: scheme.onPrimaryContainer),
-                              ),
-                              const SizedBox(width: RachaTokens.space3),
-                              Expanded(
-                                child: Text(s.name,
+                                const SizedBox(width: RachaTokens.space3),
+                                Expanded(
+                                  child: Text(
+                                    s.name,
                                     style: const TextStyle(
-                                        fontSize: RachaType.body, fontWeight: FontWeight.w700)),
-                              ),
-                            ]),
+                                      fontSize: RachaType.body,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: RachaTokens.space2),
-                            Text(s.reason,
-                                style: TextStyle(
-                                    color: scheme.onSurfaceVariant,
-                                    fontSize: RachaType.caption,
-                                    height: 1.4)),
+                            Text(
+                              s.reason,
+                              style: TextStyle(
+                                color: scheme.onSurfaceVariant,
+                                fontSize: RachaType.caption,
+                                height: 1.4,
+                              ),
+                            ),
                             const SizedBox(height: RachaTokens.space3),
                             Row(
                               children: [
                                 Expanded(
                                   child: FilledButton(
-                                    onPressed: () => context.push('/plans/new',
-                                        extra: PlanSeed(
-                                            title: s.name,
-                                            placeId: s.placeId,
-                                            placeName: s.name)),
+                                    onPressed: () => context.push(
+                                      '/plans/new',
+                                      extra: PlanSeed(
+                                        title: s.name,
+                                        placeId: s.placeId,
+                                        placeName: s.name,
+                                      ),
+                                    ),
                                     child: Text(l10n.wishlistPlanThis),
                                   ),
                                 ),
@@ -112,17 +143,30 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                                     onPressed: () async {
                                       try {
                                         await ref
-                                            .read(wishlistRepositoryProvider)
-                                            .create(title: s.name, placeId: s.placeId);
-                                        ref.invalidate(wishlistProvider);
+                                            .read(
+                                              wishlistControllerProvider
+                                                  .notifier,
+                                            )
+                                            .create(
+                                              title: s.name,
+                                              placeId: s.placeId,
+                                            );
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(l10n.wishSaved)));
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(l10n.wishSaved),
+                                            ),
+                                          );
                                         }
                                       } on ApiException catch (e) {
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(e.message)));
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(content: Text(e.message)),
+                                          );
                                         }
                                       }
                                     },

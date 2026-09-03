@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../data/notifications_repository.dart';
+import '../application/notifications.dart';
 
 /// One switch per notification type with a real example of the text, plus the
 /// reminder hour and quiet-hours window.
@@ -18,14 +18,19 @@ class NotificationsScreen extends ConsumerWidget {
 
     Future<void> save(Map<String, dynamic> changes) async {
       try {
-        await ref.read(notificationsRepositoryProvider).patch(changes);
-        ref.invalidate(notificationPreferencesProvider);
+        await ref
+            .read(notificationsControllerProvider.notifier)
+            .savePreferences(changes);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.notifSaved)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.notifSaved)));
         }
       } on ApiException catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.message)));
         }
       }
     }
@@ -72,7 +77,10 @@ class NotificationsScreen extends ConsumerWidget {
                 value: p.reminderHour,
                 items: [
                   for (var h = 0; h < 24; h++)
-                    DropdownMenuItem(value: h, child: Text('${h.toString().padLeft(2, '0')}:00')),
+                    DropdownMenuItem(
+                      value: h,
+                      child: Text('${h.toString().padLeft(2, '0')}:00'),
+                    ),
                 ],
                 onChanged: (v) => v == null ? null : save({'reminder_hour': v}),
               ),

@@ -6,8 +6,8 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/field_tile.dart';
-import '../../dates/data/dates_repository.dart';
-import '../data/protect_repository.dart';
+import '../../dates/application/dates.dart';
+import '../application/protect.dart';
 
 /// /streak/repair/new — log a date from an already-closed week (within 48h of
 /// its close) to save the streak. It stays tentative until the partner confirms.
@@ -59,23 +59,26 @@ class _RepairFormScreenState extends ConsumerState<RepairFormScreen> {
       _error = null;
     });
     try {
-      await ref.read(protectRepositoryProvider).createRepair(
-            happenedAt: _when!,
-            title: _title.text.trim(),
-          );
+      await ref
+          .read(protectControllerProvider.notifier)
+          .createRepair(happenedAt: _when!, title: _title.text.trim());
       if (!mounted) return;
       ref.invalidate(protectHubProvider);
       ref.invalidate(streakProvider);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.repairSent)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.repairSent)));
       context.pop();
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() => _error = switch (e.code) {
-              'repair_window_closed' => l10n.repairErrorWindow,
-              'repair_week_not_closed' => l10n.repairErrorNotClosed,
-              'repair_already_pending' => l10n.repairErrorPending,
-              _ => e.message,
-            });
+        setState(
+          () => _error = switch (e.code) {
+            'repair_window_closed' => l10n.repairErrorWindow,
+            'repair_week_not_closed' => l10n.repairErrorNotClosed,
+            'repair_already_pending' => l10n.repairErrorPending,
+            _ => e.message,
+          },
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -114,7 +117,9 @@ class _RepairFormScreenState extends ConsumerState<RepairFormScreen> {
                   TextField(
                     controller: _title,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(labelText: l10n.repairFieldTitle),
+                    decoration: InputDecoration(
+                      labelText: l10n.repairFieldTitle,
+                    ),
                   ),
                   const SizedBox(height: RachaTokens.space4),
                   NoteBox(
@@ -133,14 +138,19 @@ class _RepairFormScreenState extends ConsumerState<RepairFormScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                      color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                    color: scheme.outlineVariant,
+                    width: RachaTokens.borderHairline,
+                  ),
                 ),
               ),
               child: FilledButton(
                 onPressed: _busy ? null : _submit,
                 child: _busy
                     ? const SizedBox(
-                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(l10n.repairSubmit),
               ),
             ),

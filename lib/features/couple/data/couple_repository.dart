@@ -12,11 +12,16 @@ class CoupleRepository {
 
   Future<Couple> create({required String name, String? timezone}) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/couples', data: {
-        'name': name,
-        if (timezone != null && timezone.isNotEmpty) 'timezone': timezone,
-      });
-      return Couple.fromJson((res.data!['couple'] as Map).cast<String, dynamic>());
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/couples',
+        data: {
+          'name': name,
+          if (timezone != null && timezone.isNotEmpty) 'timezone': timezone,
+        },
+      );
+      return Couple.fromJson(
+        (res.data!['couple'] as Map).cast<String, dynamic>(),
+      );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -24,9 +29,10 @@ class CoupleRepository {
 
   Future<JoinResult> join(String inviteCode) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/couples/join', data: {
-        'invite_code': inviteCode,
-      });
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/couples/join',
+        data: {'invite_code': inviteCode},
+      );
       return JoinResult.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);

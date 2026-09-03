@@ -27,6 +27,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonRetry => 'Retry';
 
   @override
+  String get a11yBack => 'Back';
+
+  @override
+  String get a11yCalendar => 'Open calendar';
+
+  @override
+  String get a11yNotifications => 'Notifications';
+
+  @override
+  String a11yNotificationsUnread(int count) {
+    return 'Notifications, $count unread';
+  }
+
+  @override
+  String get a11yClearSearch => 'Clear search';
+
+  @override
+  String get a11yPreviousMonth => 'Previous month';
+
+  @override
+  String get a11yNextMonth => 'Next month';
+
+  @override
+  String get a11yMoreOptions => 'More options';
+
+  @override
+  String get a11yWeekStrip => 'Streak over the last 12 weeks';
+
+  @override
+  String a11yRatingStars(int rating) {
+    return '$rating of 5 stars';
+  }
+
+  @override
+  String a11yCategoryShare(String category, String percent) {
+    return '$category: $percent%';
+  }
+
+  @override
   String get commonCancel => 'Cancel';
 
   @override
@@ -525,6 +564,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeDeletionBanner => 'Your account is scheduled for deletion.';
+
+  @override
+  String homeDeletionBannerOn(String date) {
+    return 'Your account will be deleted on $date.';
+  }
 
   @override
   String get homeCancelDeletion => 'Cancel';
@@ -1300,7 +1344,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileTimezone => 'Time zone';
 
   @override
-  String get profileWeekStart => 'Week starts';
+  String get coupleWeekCloseNote =>
+      'Your streak week closes on Sunday night, in your couple\'s time zone.';
 
   @override
   String get profileInviteCode => 'Invite code';
@@ -1313,12 +1358,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileEditProfile => 'Edit profile';
-
-  @override
-  String get weekStartMonday => 'Monday';
-
-  @override
-  String get weekStartSunday => 'Sunday';
 
   @override
   String get mapSummary => 'Summary';

@@ -7,9 +7,9 @@ import 'package:latlong2/latlong.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../plans/domain/models.dart';
-import '../../wishlist/data/wishlist_repository.dart';
+import '../../wishlist/application/wishlist.dart';
 import '../../wishlist/domain/models.dart';
-import '../data/dates_repository.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
 
@@ -73,8 +73,14 @@ class _PlacesMapScreenState extends ConsumerState<PlacesMapScreen> {
             padding: const EdgeInsets.only(bottom: RachaTokens.space2),
             child: SegmentedButton<_Layer>(
               segments: [
-                ButtonSegment(value: _Layer.visited, label: Text(l10n.mapLayerVisited)),
-                ButtonSegment(value: _Layer.toVisit, label: Text(l10n.mapLayerToVisit)),
+                ButtonSegment(
+                  value: _Layer.visited,
+                  label: Text(l10n.mapLayerVisited),
+                ),
+                ButtonSegment(
+                  value: _Layer.toVisit,
+                  label: Text(l10n.mapLayerToVisit),
+                ),
               ],
               selected: {_layer},
               onSelectionChanged: (s) => setState(() {
@@ -91,14 +97,19 @@ class _PlacesMapScreenState extends ConsumerState<PlacesMapScreen> {
         data: (s) {
           final visitedPlaces = s.places;
           if (_layer == _Layer.visited && visitedPlaces.isEmpty) {
-            return Center(child: Text(l10n.summaryEmpty, textAlign: TextAlign.center));
+            return Center(
+              child: Text(l10n.summaryEmpty, textAlign: TextAlign.center),
+            );
           }
           if (_layer == _Layer.toVisit && toVisit.isEmpty) {
-            return Center(child: Text(l10n.wishlistEmpty, textAlign: TextAlign.center));
+            return Center(
+              child: Text(l10n.wishlistEmpty, textAlign: TextAlign.center),
+            );
           }
 
-          final maxVisits =
-              visitedPlaces.map((p) => p.visits).fold(1, (a, b) => a > b ? a : b);
+          final maxVisits = visitedPlaces
+              .map((p) => p.visits)
+              .fold(1, (a, b) => a > b ? a : b);
           final center = _layer == _Layer.visited
               ? LatLng(visitedPlaces.first.lat, visitedPlaces.first.lng)
               : LatLng(toVisit.first.placeLat!, toVisit.first.placeLng!);
@@ -124,7 +135,8 @@ class _PlacesMapScreenState extends ConsumerState<PlacesMapScreen> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'app.racha',
                     ),
                     MarkerLayer(
@@ -150,21 +162,28 @@ class _PlacesMapScreenState extends ConsumerState<PlacesMapScreen> {
                                   width: 44,
                                   height: 44,
                                   child: GestureDetector(
-                                    onTap: () => context.push('/plans/new',
-                                        extra: PlanSeed(
-                                          title: w.title,
-                                          placeId: w.placeId,
-                                          placeName: w.placeName,
-                                          wishlistItemId: w.id,
-                                        )),
-                                    child: Icon(Icons.flag_circle_outlined,
-                                        color: RachaTokens.atRiskLight, size: 34),
+                                    onTap: () => context.push(
+                                      '/plans/new',
+                                      extra: PlanSeed(
+                                        title: w.title,
+                                        placeId: w.placeId,
+                                        placeName: w.placeName,
+                                        wishlistItemId: w.id,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.flag_circle_outlined,
+                                      color: RachaTokens.atRiskLight,
+                                      size: 34,
+                                    ),
                                   ),
                                 ),
                             ],
                     ),
                     const RichAttributionWidget(
-                      attributions: [TextSourceAttribution('OpenStreetMap contributors')],
+                      attributions: [
+                        TextSourceAttribution('OpenStreetMap contributors'),
+                      ],
                     ),
                   ],
                 ),
@@ -256,7 +275,10 @@ class _BottomPanel extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             border: Border(
-              top: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+              top: BorderSide(
+                color: scheme.outlineVariant,
+                width: RachaTokens.borderHairline,
+              ),
             ),
           ),
           padding: const EdgeInsets.all(RachaTokens.space3),
@@ -266,7 +288,8 @@ class _BottomPanel extends StatelessWidget {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: places.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: RachaTokens.space2),
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(width: RachaTokens.space2),
                     itemBuilder: (context, i) {
                       final p = places[i];
                       return ActionChip(
@@ -286,8 +309,11 @@ class _BottomPanel extends StatelessWidget {
                         color: scheme.primaryContainer,
                         borderRadius: RachaTokens.brS,
                       ),
-                      child: Icon(categoryIcon(selected!.category),
-                          color: scheme.onPrimaryContainer, size: 20),
+                      child: Icon(
+                        categoryIcon(selected!.category),
+                        color: scheme.onPrimaryContainer,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: RachaTokens.space3),
                     Expanded(
@@ -295,10 +321,12 @@ class _BottomPanel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(selected!.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w800)),
+                          Text(
+                            selected!.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
                           Text(
                             [
                               l10n.summaryVisitsCount(selected!.visits),
@@ -306,7 +334,9 @@ class _BottomPanel extends StatelessWidget {
                                 '★ ${selected!.avgRating!.toStringAsFixed(1)}',
                             ].join(' · '),
                             style: TextStyle(
-                                color: scheme.onSurfaceVariant, fontSize: RachaType.caption),
+                              color: scheme.onSurfaceVariant,
+                              fontSize: RachaType.caption,
+                            ),
                           ),
                         ],
                       ),

@@ -19,7 +19,10 @@ class CoupleSetupScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AuthHero(title: l10n.coupleSetupTitle, subtitle: l10n.coupleSetupSubtitle),
+            AuthHero(
+              title: l10n.coupleSetupTitle,
+              subtitle: l10n.coupleSetupSubtitle,
+            ),
             Padding(
               padding: const EdgeInsets.all(RachaTokens.space5),
               child: Column(
@@ -67,7 +70,9 @@ class _OptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
-      color: highlighted ? scheme.primaryContainer : scheme.surfaceContainerHighest,
+      color: highlighted
+          ? scheme.primaryContainer
+          : scheme.surfaceContainerHighest,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: RachaTokens.brM,
@@ -82,28 +87,36 @@ class _OptionCard extends StatelessWidget {
           padding: const EdgeInsets.all(RachaTokens.space4),
           child: Row(
             children: [
-              Icon(icon,
-                  size: 28,
-                  color: highlighted ? scheme.onPrimaryContainer : scheme.primary),
+              Icon(
+                icon,
+                size: 28,
+                color: highlighted ? scheme.onPrimaryContainer : scheme.primary,
+              ),
               const SizedBox(width: RachaTokens.space4),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: TextStyle(
-                          fontSize: RachaType.body,
-                          fontWeight: FontWeight.w800,
-                          color: highlighted ? scheme.onPrimaryContainer : scheme.onSurface,
-                        )),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: RachaType.body,
+                        fontWeight: FontWeight.w800,
+                        color: highlighted
+                            ? scheme.onPrimaryContainer
+                            : scheme.onSurface,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle,
-                        style: TextStyle(
-                          fontSize: RachaType.caption,
-                          color: highlighted
-                              ? scheme.onPrimaryContainer.withValues(alpha: 0.8)
-                              : scheme.onSurfaceVariant,
-                        )),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: RachaType.caption,
+                        color: highlighted
+                            ? scheme.onPrimaryContainer.withValues(alpha: 0.8)
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
