@@ -124,7 +124,9 @@ class _PlanFormScreenState extends ConsumerState<PlanFormScreen> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(
-          () => _error = e.code == 'PAST_DATE' ? l10n.planErrorPast : e.message,
+          () => _error = e.code == 'PAST_DATE'
+              ? l10n.planErrorPast
+              : e.localizedMessage(context),
         );
       }
     } finally {

@@ -96,7 +96,7 @@ class _DateEditScreenState extends ConsumerState<DateEditScreen> {
             ? AppLocalizations.of(context).dateErrorFuture
             : (e.isNetwork
                   ? AppLocalizations.of(context).commonNoConnection
-                  : e.message);
+                  : e.localizedMessage(context));
         _saving = false;
       });
     }

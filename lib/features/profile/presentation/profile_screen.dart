@@ -548,7 +548,7 @@ Future<void> _pickTimezone(
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
     }
   }
 }

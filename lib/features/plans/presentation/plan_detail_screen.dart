@@ -253,7 +253,7 @@ class _RespondButtonsState extends ConsumerState<_RespondButtons> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -327,7 +327,7 @@ class _OutcomeCardState extends ConsumerState<_OutcomeCard> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
         setState(() => _busy = false);
       }
     }
@@ -426,7 +426,7 @@ class _PlanMenu extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     }
   }
@@ -464,7 +464,7 @@ class _PlanMenu extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     }
   }

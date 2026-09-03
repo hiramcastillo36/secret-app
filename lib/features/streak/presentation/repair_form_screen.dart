@@ -76,7 +76,7 @@ class _RepairFormScreenState extends ConsumerState<RepairFormScreen> {
             'repair_window_closed' => l10n.repairErrorWindow,
             'repair_week_not_closed' => l10n.repairErrorNotClosed,
             'repair_already_pending' => l10n.repairErrorPending,
-            _ => e.message,
+            _ => e.localizedMessage(context),
           },
         );
       }

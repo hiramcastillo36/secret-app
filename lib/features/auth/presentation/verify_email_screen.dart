@@ -66,7 +66,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       setState(() => _message = l10n.verifySent);
       _startCooldown(retryAfter);
     } on ApiException catch (e) {
-      if (mounted) setState(() => _message = e.message);
+      if (mounted) setState(() => _message = e.localizedMessage(context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -83,7 +83,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         _message = l10n.verifyDone;
       });
     } on ApiException catch (e) {
-      if (mounted) setState(() => _message = e.message);
+      if (mounted) setState(() => _message = e.localizedMessage(context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

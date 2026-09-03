@@ -45,7 +45,7 @@ class _RepairConfirmScreenState extends ConsumerState<RepairConfirmScreen> {
       if (mounted) {
         final msg = e.code == 'cannot_confirm_own_repair'
             ? l10n.repairCannotConfirmOwn
-            : e.message;
+            : e.localizedMessage(context);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(msg)));

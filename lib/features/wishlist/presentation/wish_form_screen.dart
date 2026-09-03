@@ -62,7 +62,7 @@ class _WishFormScreenState extends ConsumerState<WishFormScreen> {
       ).showSnackBar(SnackBar(content: Text(l10n.wishSaved)));
       context.pop();
     } on ApiException catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (mounted) setState(() => _error = e.localizedMessage(context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

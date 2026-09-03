@@ -45,7 +45,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(
-          () => _error = e.isNetwork ? l10n.commonNoConnection : e.message,
+          () => _error = e.isNetwork
+              ? l10n.commonNoConnection
+              : e.localizedMessage(context),
         );
       }
     } finally {

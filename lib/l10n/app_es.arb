@@ -450,6 +450,13 @@
 
   "timelineSearchHint": "Buscar citas o lugares",
   "timelineCount": "{count, plural, =1{1 cita} other{{count} citas}}",
+  "relativeToday": "Hoy",
+  "relativeYesterday": "Ayer",
+  "relativeTomorrow": "Mañana",
+  "relativeDaysAgo": "{count, plural, other{Hace {count} días}}",
+  "@relativeDaysAgo": { "placeholders": { "count": { "type": "int" } } },
+  "relativeInDays": "{count, plural, other{En {count} días}}",
+  "@relativeInDays": { "placeholders": { "count": { "type": "int" } } },
   "timelineNoMatch": "Nada coincide con tu búsqueda",
   "timelineClearSearch": "Limpiar búsqueda",
 

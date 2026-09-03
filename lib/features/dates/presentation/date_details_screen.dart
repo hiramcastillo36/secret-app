@@ -126,7 +126,7 @@ class _DateDetailsScreenState extends ConsumerState<DateDetailsScreen> {
             ? AppLocalizations.of(context).dateErrorFuture
             : (e.isNetwork
                   ? AppLocalizations.of(context).commonNoConnection
-                  : e.message);
+                  : e.localizedMessage(context));
         _submitting = false;
       });
     }

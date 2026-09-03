@@ -51,7 +51,7 @@ class _RouletteScreenState extends ConsumerState<RouletteScreen> {
         if (!_empty) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(e.message)));
+          ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
         }
       }
     } finally {

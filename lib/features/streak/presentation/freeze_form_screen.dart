@@ -71,7 +71,7 @@ class _FreezeFormScreenState extends ConsumerState<FreezeFormScreen> {
             'freeze_quota_exceeded' => l10n.freezeErrorQuota,
             'week_already_complete' => l10n.freezeErrorWeekComplete,
             'freeze_past' => l10n.freezeErrorPast,
-            _ => e.message,
+            _ => e.localizedMessage(context),
           },
         );
       }

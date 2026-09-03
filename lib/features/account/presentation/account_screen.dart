@@ -186,7 +186,7 @@ class _DeleteAccountTileState extends ConsumerState<_DeleteAccountTile> {
             'STALE_CREDENTIAL' => l10n.accountDeletePassword,
             'CONFIRMATION_MISMATCH' => l10n.accountDeleteConfirmLabel,
             'NETWORK' => l10n.commonNoConnection,
-            _ => e.message,
+            _ => e.localizedMessage(context),
           },
         );
       }
@@ -295,7 +295,7 @@ class _CancelDeletionTileState extends ConsumerState<_CancelDeletionTile> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     } finally {
       if (mounted) setState(() => _busy = false);

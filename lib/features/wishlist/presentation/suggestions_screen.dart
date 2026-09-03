@@ -166,7 +166,11 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(
-                                            SnackBar(content: Text(e.message)),
+                                            SnackBar(
+                                              content: Text(
+                                                e.localizedMessage(context),
+                                              ),
+                                            ),
                                           );
                                         }
                                       }

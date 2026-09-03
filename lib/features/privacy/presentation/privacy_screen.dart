@@ -38,7 +38,11 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.isNetwork ? l10n.commonNoConnection : e.message),
+            content: Text(
+              e.isNetwork
+                  ? l10n.commonNoConnection
+                  : e.localizedMessage(context),
+            ),
           ),
         );
       }
@@ -151,7 +155,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     }
   }
@@ -202,7 +206,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     }
   }

@@ -74,7 +74,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           () => _error = switch (e.code) {
             'INVALID_TOKEN' => l10n.resetInvalidToken,
             'NETWORK' => l10n.commonNoConnection,
-            _ => e.message,
+            _ => e.localizedMessage(context),
           },
         );
       }

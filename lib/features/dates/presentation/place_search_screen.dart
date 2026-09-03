@@ -75,7 +75,7 @@ class _PlaceSearchScreenState extends ConsumerState<PlaceSearchScreen> {
       setState(() {
         _error = e.isNetwork
             ? AppLocalizations.of(context).dateNewOffline
-            : e.message;
+            : e.localizedMessage(context);
         _loading = false;
       });
     }
