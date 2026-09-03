@@ -39,6 +39,12 @@ class CoupleController extends AutoDisposeNotifier<AsyncValue<Object?>> {
       return null;
     }
   }
+
+  /// Drops a stale error so it does not surface on the sibling screen — create
+  /// and join share this provider (audit F-H11). Screens call it on mount.
+  void clearError() {
+    if (state.hasError) state = const AsyncValue.data(null);
+  }
 }
 
 final coupleControllerProvider =

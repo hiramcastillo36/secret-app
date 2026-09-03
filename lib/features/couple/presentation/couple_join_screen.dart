@@ -27,6 +27,16 @@ class _CoupleJoinScreenState extends ConsumerState<CoupleJoinScreen> {
   final _code = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Drop any error left over from the create screen — they share the
+    // controller (audit F-H11).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(coupleControllerProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
     _code.dispose();
     super.dispose();

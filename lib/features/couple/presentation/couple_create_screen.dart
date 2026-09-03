@@ -43,6 +43,16 @@ class _CoupleCreateScreenState extends ConsumerState<CoupleCreateScreen> {
   bool _submitted = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Drop any error left over from the join screen — they share the
+    // controller (audit F-H11).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(coupleControllerProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     super.dispose();

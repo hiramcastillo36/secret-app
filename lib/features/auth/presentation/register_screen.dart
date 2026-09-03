@@ -24,6 +24,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _submitted = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Drop any error left over from the login screen — they share the
+    // controller (audit F-H11).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(authControllerProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     _email.dispose();

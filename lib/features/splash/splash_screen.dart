@@ -12,8 +12,9 @@ import '../auth/data/auth_repository.dart';
 import '../auth/domain/models.dart';
 
 /// Startup gate: reads the stored session, calls GET /me once and routes to
-/// onboarding, pairing or home. Never a long spinner — it falls back to login
-/// after two seconds.
+/// onboarding, pairing or home. A slow or failing GET /me on a valid session
+/// lands on /home anyway and lets Home's own loading and error states take over
+/// (audit F-H4) — it never bounces a signed-in user to the login screen.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -22,8 +23,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  bool _failed = false;
-
   @override
   void initState() {
     super.initState();
@@ -31,7 +30,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _boot() async {
-    setState(() => _failed = false);
     try {
       await ref.read(sessionControllerProvider.notifier).bootstrap();
       final status = ref.read(sessionControllerProvider);
@@ -43,7 +41,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       final me = await ref
           .read(authRepositoryProvider)
           .me()
-          .timeout(const Duration(seconds: 2));
+          .timeout(const Duration(seconds: 6));
 
       switch (me.route) {
         case BootstrapRoute.home:
@@ -57,11 +55,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         _goto('/onboarding');
         return;
       }
-      setState(() => _failed = true);
+      // Any other server error on a valid session: proceed to Home, which
+      // renders its own error state (audit F-H4).
+      _goto('/home');
     } on TimeoutException {
-      _goto('/login');
+      // Slow network or a cold-start backend. The session is valid — go to
+      // Home rather than making the user log in again.
+      _goto('/home');
     } catch (_) {
-      setState(() => _failed = true);
+      // Unknown failure: let the router's guard sort out where this lands.
+      _goto('/home');
     }
   }
 
@@ -120,17 +123,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                 ),
                 const SizedBox(height: RachaTokens.space6),
-                if (_failed)
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: RachaTokens.seed,
-                    ),
-                    onPressed: _boot,
-                    child: Text(l10n.commonRetry),
-                  )
-                else
-                  const CircularProgressIndicator(color: Colors.white),
+                const CircularProgressIndicator(color: Colors.white),
               ],
             ),
           ),

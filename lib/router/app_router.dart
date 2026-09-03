@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/auth/session_controller.dart';
 import '../features/account/presentation/account_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -49,13 +50,68 @@ import '../features/wishlist/presentation/wishlist_screen.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
+/// Locations reachable without a session. Everything else is gated. Matching is
+/// exact or by `/prefix/` so `/auth/reset-password` (an email deep link) stays
+/// open while `/dates/:id` does not.
+const _publicPrefixes = <String>[
+  '/onboarding',
+  '/login',
+  '/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+];
+
+bool isPublicLocation(String loc) {
+  for (final p in _publicPrefixes) {
+    if (loc == p || loc.startsWith('$p/')) return true;
+  }
+  return false;
+}
+
 /// All routes in the design. The four main sections live under a
 /// [StatefulShellRoute] so the bottom bar persists across them; everything else
 /// is pushed on the root navigator and covers the bar.
 final routerProvider = Provider<GoRouter>((ref) {
+  // Bridges the session state to go_router: the redirect below re-runs whenever
+  // it changes (audit F-H1: there was no refreshListenable, so a failed token
+  // refresh cleared the session but left the user stranded on /home with every
+  // call 401ing).
+  final authChanged = ValueNotifier<AuthStatus>(
+    ref.read(sessionControllerProvider),
+  );
+  ref.onDispose(authChanged.dispose);
+  ref.listen<AuthStatus>(sessionControllerProvider, (_, next) {
+    authChanged.value = next;
+  });
+
   return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/splash',
+    refreshListenable: authChanged,
+    redirect: (context, state) {
+      final status = ref.read(sessionControllerProvider);
+      final loc = state.matchedLocation;
+
+      // /splash owns bootstrap and routes onward itself.
+      if (loc == '/splash') return null;
+
+      final public = isPublicLocation(loc);
+
+      switch (status) {
+        case AuthStatus.unknown:
+          // Session not resolved yet — hold on /splash unless already public.
+          return public ? null : '/splash';
+        case AuthStatus.unauthenticated:
+          return public ? null : '/onboarding';
+        case AuthStatus.authenticated:
+          // Signed in: don't sit on the entry screens.
+          if (loc == '/onboarding' || loc == '/login' || loc == '/register') {
+            return '/home';
+          }
+          return null;
+      }
+    },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(
