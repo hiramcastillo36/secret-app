@@ -10,36 +10,65 @@ import '../application/notifications.dart';
 
 /// One switch per notification type with a real example of the text, plus the
 /// reminder hour and quiet-hours window.
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final async = ref.watch(notificationPreferencesProvider);
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
 
-    Future<void> save(Map<String, dynamic> changes) async {
-      try {
-        await ref
-            .read(notificationsControllerProvider.notifier)
-            .savePreferences(changes);
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.notifSaved)));
-        }
-      } on ApiException catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(e.message)));
-        }
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  // Applied on top of the server value the instant a control is touched, so a
+  // switch doesn't visually bounce back until the PATCH round-trips (audit F,
+  // medium). Cleared per key once that key's save resolves either way.
+  final Map<String, Object> _optimistic = {};
+
+  bool _bool(bool serverValue, String key) =>
+      _optimistic[key] as bool? ?? serverValue;
+
+  int _int(int serverValue, String key) =>
+      _optimistic[key] as int? ?? serverValue;
+
+  String _str(String serverValue, String key) =>
+      _optimistic[key] as String? ?? serverValue;
+
+  Future<void> _save(Map<String, Object> changes) async {
+    setState(() => _optimistic.addAll(changes));
+    final l10n = AppLocalizations.of(context);
+    try {
+      await ref
+          .read(notificationsControllerProvider.notifier)
+          .savePreferences(changes);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.notifSaved)));
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => changes.keys.forEach(_optimistic.remove));
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final async = ref.watch(notificationPreferencesProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notifTitle)),
       body: async.when(
+        // Keep showing the current values while a save reloads the provider.
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const SkeletonList(rows: 6, rowHeight: 56),
         error: (_, __) => ErrorRetry(
           onRetry: () => ref.invalidate(notificationPreferencesProvider),
@@ -48,37 +77,37 @@ class NotificationsScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
           children: [
             SwitchListTile.adaptive(
-              value: p.streakReminder,
+              value: _bool(p.streakReminder, 'streak_reminder'),
               title: Text(l10n.notifStreakReminder),
               subtitle: Text(l10n.notifStreakReminderEx),
               isThreeLine: true,
-              onChanged: (v) => save({'streak_reminder': v}),
+              onChanged: (v) => _save({'streak_reminder': v}),
             ),
             SwitchListTile.adaptive(
-              value: p.streakAdvanced,
+              value: _bool(p.streakAdvanced, 'streak_advanced'),
               title: Text(l10n.notifStreakAdvanced),
-              onChanged: (v) => save({'streak_advanced': v}),
+              onChanged: (v) => _save({'streak_advanced': v}),
             ),
             SwitchListTile.adaptive(
-              value: p.tagPending,
+              value: _bool(p.tagPending, 'tag_pending'),
               title: Text(l10n.notifTagPending),
-              onChanged: (v) => save({'tag_pending': v}),
+              onChanged: (v) => _save({'tag_pending': v}),
             ),
             SwitchListTile.adaptive(
-              value: p.partnerActivity,
+              value: _bool(p.partnerActivity, 'partner_activity'),
               title: Text(l10n.notifPartnerActivity),
-              onChanged: (v) => save({'partner_activity': v}),
+              onChanged: (v) => _save({'partner_activity': v}),
             ),
             SwitchListTile.adaptive(
-              value: p.weeklyRecap,
+              value: _bool(p.weeklyRecap, 'weekly_recap'),
               title: Text(l10n.notifWeeklyRecap),
-              onChanged: (v) => save({'weekly_recap': v}),
+              onChanged: (v) => _save({'weekly_recap': v}),
             ),
             const Divider(),
             ListTile(
               title: Text(l10n.notifReminderHour),
               trailing: DropdownButton<int>(
-                value: p.reminderHour,
+                value: _int(p.reminderHour, 'reminder_hour'),
                 items: [
                   for (var h = 0; h < 24; h++)
                     DropdownMenuItem(
@@ -86,14 +115,18 @@ class NotificationsScreen extends ConsumerWidget {
                       child: Text('${h.toString().padLeft(2, '0')}:00'),
                     ),
                 ],
-                onChanged: (v) => v == null ? null : save({'reminder_hour': v}),
+                onChanged: (v) =>
+                    v == null ? null : _save({'reminder_hour': v}),
               ),
             ),
             ListTile(
               title: Text(l10n.notifQuietHours),
-              subtitle: Text('${p.quietHoursStart} – ${p.quietHoursEnd}'),
+              subtitle: Text(
+                '${_str(p.quietHoursStart, 'quiet_hours_start')} – '
+                '${_str(p.quietHoursEnd, 'quiet_hours_end')}',
+              ),
               trailing: TextButton(
-                onPressed: () => _editQuietHours(context, p, save),
+                onPressed: () => _editQuietHours(context, p),
                 child: Text(l10n.dateDetailEdit),
               ),
             ),
@@ -106,7 +139,6 @@ class NotificationsScreen extends ConsumerWidget {
   Future<void> _editQuietHours(
     BuildContext context,
     NotificationPreferences p,
-    Future<void> Function(Map<String, dynamic>) save,
   ) async {
     final l10n = AppLocalizations.of(context);
     TimeOfDay parse(String hm) {
@@ -116,18 +148,18 @@ class NotificationsScreen extends ConsumerWidget {
 
     final start = await showTimePicker(
       context: context,
-      initialTime: parse(p.quietHoursStart),
+      initialTime: parse(_str(p.quietHoursStart, 'quiet_hours_start')),
       helpText: l10n.notifQuietFrom,
     );
     if (start == null || !context.mounted) return;
     final end = await showTimePicker(
       context: context,
-      initialTime: parse(p.quietHoursEnd),
+      initialTime: parse(_str(p.quietHoursEnd, 'quiet_hours_end')),
       helpText: l10n.notifQuietTo,
     );
     if (end == null) return;
     String fmt(TimeOfDay t) =>
         '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-    await save({'quiet_hours_start': fmt(start), 'quiet_hours_end': fmt(end)});
+    await _save({'quiet_hours_start': fmt(start), 'quiet_hours_end': fmt(end)});
   }
 }

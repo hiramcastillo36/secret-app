@@ -11,36 +11,55 @@ import '../application/privacy.dart';
 
 /// /profile/privacy — the handful of switches that change what the app shares,
 /// plus the account-level exits (export, leave couple, delete account). Each
-/// switch saves on toggle; a failed save reverts and shows the reason inline via
-/// a snackbar, never a dialog.
-class PrivacyScreen extends ConsumerWidget {
+/// switch is optimistic: it moves immediately and only snaps back if the PATCH
+/// fails (audit F, medium: every switch bounced ~300ms until the refetch).
+class PrivacyScreen extends ConsumerStatefulWidget {
   const PrivacyScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PrivacyScreen> createState() => _PrivacyScreenState();
+}
+
+class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
+  final Map<String, Object> _optimistic = {};
+
+  bool _bool(bool serverValue, String key) =>
+      _optimistic[key] as bool? ?? serverValue;
+
+  String _str(String serverValue, String key) =>
+      _optimistic[key] as String? ?? serverValue;
+
+  Future<void> _save(Map<String, Object> changes) async {
+    setState(() => _optimistic.addAll(changes));
+    final l10n = AppLocalizations.of(context);
+    try {
+      await ref.read(privacyControllerProvider.notifier).save(changes);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.isNetwork ? l10n.commonNoConnection : e.message),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => changes.keys.forEach(_optimistic.remove));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final async = ref.watch(privacySettingsProvider);
     final scheme = Theme.of(context).colorScheme;
 
-    Future<void> save(Map<String, dynamic> changes) async {
-      try {
-        await ref.read(privacyControllerProvider.notifier).save(changes);
-      } on ApiException catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.isNetwork ? l10n.commonNoConnection : e.message),
-            ),
-          );
-        }
-        // Refetch so a Cupertino switch that already animated snaps back.
-        ref.invalidate(privacySettingsProvider);
-      }
-    }
-
     return Scaffold(
       appBar: AppBar(title: Text(l10n.privacyTitle)),
       body: async.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const SkeletonList(rows: 5, rowHeight: 56),
         error: (_, __) =>
             ErrorRetry(onRetry: () => ref.invalidate(privacySettingsProvider)),
@@ -48,41 +67,46 @@ class PrivacyScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
           children: [
             SwitchListTile.adaptive(
-              value: s.requireTagConsent,
+              value: _bool(s.requireTagConsent, 'require_tag_consent'),
               title: Text(l10n.privacyRequireTagConsent),
               subtitle: Text(l10n.privacyRequireTagConsentSub),
               isThreeLine: true,
-              onChanged: (v) => save({'require_tag_consent': v}),
+              onChanged: (v) => _save({'require_tag_consent': v}),
             ),
             SwitchListTile.adaptive(
-              value: s.shareCost,
+              value: _bool(s.shareCost, 'share_cost'),
               title: Text(l10n.privacyShareCost),
               subtitle: Text(l10n.privacyShareCostSub),
               isThreeLine: true,
-              onChanged: (v) => save({'share_cost': v}),
+              onChanged: (v) => _save({'share_cost': v}),
             ),
             SwitchListTile.adaptive(
-              value: s.notesPrivateByDefault,
+              value:
+                  _str(
+                    s.notesPrivateByDefault ? 'private' : 'couple',
+                    'default_notes_visibility',
+                  ) ==
+                  'private',
               title: Text(l10n.privacyNotesPrivate),
               subtitle: Text(l10n.privacyNotesPrivateSub),
               isThreeLine: true,
               onChanged: (v) =>
-                  save({'default_notes_visibility': v ? 'private' : 'couple'}),
+                  _save({'default_notes_visibility': v ? 'private' : 'couple'}),
             ),
             const Divider(),
             SwitchListTile.adaptive(
-              value: s.analyticsOptIn,
+              value: _bool(s.analyticsOptIn, 'analytics_opt_in'),
               title: Text(l10n.privacyAnalytics),
               subtitle: Text(l10n.privacyAnalyticsSub),
               isThreeLine: true,
-              onChanged: (v) => save({'analytics_opt_in': v}),
+              onChanged: (v) => _save({'analytics_opt_in': v}),
             ),
             SwitchListTile.adaptive(
-              value: s.marketingEmailsOptIn,
+              value: _bool(s.marketingEmailsOptIn, 'marketing_emails_opt_in'),
               title: Text(l10n.privacyMarketing),
               subtitle: Text(l10n.privacyMarketingSub),
               isThreeLine: true,
-              onChanged: (v) => save({'marketing_emails_opt_in': v}),
+              onChanged: (v) => _save({'marketing_emails_opt_in': v}),
             ),
             const Divider(),
             ListTile(
