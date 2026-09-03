@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../../common/section_label.dart';
 import '../application/plans.dart';
 import '../domain/models.dart';
@@ -87,7 +88,6 @@ class _MonthTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final async = ref.watch(calendarProvider(month));
 
     return Column(
@@ -96,8 +96,9 @@ class _MonthTab extends ConsumerWidget {
         Expanded(
           child: async.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) =>
-                Center(child: Text(l10n.commonSomethingWentWrong)),
+            error: (_, __) => ErrorRetry(
+              onRetry: () => ref.invalidate(calendarProvider(month)),
+            ),
             data: (cal) => ListView(
               children: [
                 _MonthGrid(
@@ -585,7 +586,8 @@ class _IdeasTab extends ConsumerWidget {
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+      error: (_, __) =>
+          ErrorRetry(onRetry: () => ref.invalidate(plansListProvider)),
       data: (list) {
         final ideas = list.ideas;
         return ListView(

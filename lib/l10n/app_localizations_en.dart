@@ -454,6 +454,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSignOut => 'Sign out';
 
   @override
+  String get profileSignOutWarning =>
+      'You will need to sign in again on this device. Your dates and streak are untouched.';
+
+  @override
+  String get profileSignOutConfirm => 'Sign out';
+
+  @override
   String get forgotTitle => 'Recover your password';
 
   @override
@@ -997,6 +1004,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wishlistDeletePlanned =>
       'This wish is already planned. Delete anyway?';
+
+  @override
+  String get wishlistDeleteConfirm => 'Remove this wish from the list?';
 
   @override
   String get wishNewTitle => 'Add to the list';

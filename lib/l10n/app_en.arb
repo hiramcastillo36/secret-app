@@ -158,6 +158,8 @@
   "profileDatesByMonth": "Dates per month",
   "profileMyAccount": "My account",
   "profileSignOut": "Sign out",
+  "profileSignOutWarning": "You will need to sign in again on this device. Your dates and streak are untouched.",
+  "profileSignOutConfirm": "Sign out",
 
   "forgotTitle": "Recover your password",
   "forgotBody": "Enter your email and we'll send a link to choose a new password.",
@@ -352,6 +354,7 @@
   "wishlistReopen": "Reopen",
   "wishlistDelete": "Delete",
   "wishlistDeletePlanned": "This wish is already planned. Delete anyway?",
+  "wishlistDeleteConfirm": "Remove this wish from the list?",
 
   "wishNewTitle": "Add to the list",
   "wishFieldTitle": "What do you want to do?",

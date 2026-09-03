@@ -8,6 +8,7 @@ import '../../../core/format/money.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_banner.dart';
+import '../../common/error_retry.dart';
 import '../../common/field_tile.dart';
 import '../../common/step_bar.dart';
 import '../../couple/application/couple.dart';
@@ -144,7 +145,8 @@ class _DateDetailsScreenState extends ConsumerState<DateDetailsScreen> {
       ),
       body: coupleAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+        error: (_, __) =>
+            ErrorRetry(onRetry: () => ref.invalidate(coupleMeProvider)),
         data: (view) {
           final members = view.members;
           if (_tagged.isEmpty) {

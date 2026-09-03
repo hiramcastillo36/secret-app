@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/format/money.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../../common/osm_attribution.dart';
 import '../../common/section_label.dart';
 import '../application/dates.dart';
@@ -29,7 +30,9 @@ class DateDetailScreen extends ConsumerWidget {
       ),
       error: (_, __) => Scaffold(
         appBar: AppBar(title: Text(l10n.dateDetailsTitle)),
-        body: Center(child: Text(l10n.commonSomethingWentWrong)),
+        body: ErrorRetry(
+          onRetry: () => ref.invalidate(dateByIdProvider(dateId)),
+        ),
       ),
       data: (d) => _Loaded(date: d),
     );

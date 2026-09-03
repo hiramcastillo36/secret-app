@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
@@ -36,7 +37,8 @@ class SummaryScreen extends ConsumerWidget {
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+        error: (_, __) =>
+            ErrorRetry(onRetry: () => ref.invalidate(summaryPlacesProvider)),
         data: (s) => s.isEmpty
             ? _Empty(text: l10n.summaryEmpty)
             : RefreshIndicator(

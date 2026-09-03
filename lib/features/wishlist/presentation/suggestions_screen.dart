@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../../dates/presentation/date_format.dart';
 import '../../plans/domain/models.dart';
 import '../application/wishlist.dart';
@@ -50,8 +51,9 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
           Expanded(
             child: async.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) =>
-                  Center(child: Text(l10n.commonSomethingWentWrong)),
+              error: (_, __) => ErrorRetry(
+                onRetry: () => ref.invalidate(suggestionsProvider(_cheap)),
+              ),
               data: (list) {
                 if (list.isEmpty) {
                   return Center(

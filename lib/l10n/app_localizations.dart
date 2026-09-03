@@ -878,6 +878,18 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get profileSignOut;
 
+  /// No description provided for @profileSignOutWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You will need to sign in again on this device. Your dates and streak are untouched.'**
+  String get profileSignOutWarning;
+
+  /// No description provided for @profileSignOutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get profileSignOutConfirm;
+
   /// No description provided for @forgotTitle.
   ///
   /// In en, this message translates to:
@@ -1879,6 +1891,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This wish is already planned. Delete anyway?'**
   String get wishlistDeletePlanned;
+
+  /// No description provided for @wishlistDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this wish from the list?'**
+  String get wishlistDeleteConfirm;
 
   /// No description provided for @wishNewTitle.
   ///

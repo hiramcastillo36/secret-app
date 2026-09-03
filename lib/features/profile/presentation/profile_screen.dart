@@ -25,6 +25,46 @@ class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    // Sign-out is destructive enough to confirm (audit F, medium: it had none).
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(RachaTokens.space5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.profileSignOut,
+              style: const TextStyle(
+                fontSize: RachaType.headline,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: RachaTokens.space2),
+            Text(
+              l10n.profileSignOutWarning,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: RachaTokens.space5),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: scheme.error),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.profileSignOutConfirm),
+            ),
+            const SizedBox(height: RachaTokens.space2),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.commonCancel),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true) return;
+
     final storage = ref.read(tokenStorageProvider);
     final refresh = await storage.readRefresh();
     if (refresh != null && refresh.isNotEmpty) {

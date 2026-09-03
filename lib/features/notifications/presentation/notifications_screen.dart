@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../application/notifications.dart';
 
 /// One switch per notification type with a real example of the text, plus the
@@ -39,7 +40,9 @@ class NotificationsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.notifTitle)),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+        error: (_, __) => ErrorRetry(
+          onRetry: () => ref.invalidate(notificationPreferencesProvider),
+        ),
         data: (p) => ListView(
           padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
           children: [

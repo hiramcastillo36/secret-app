@@ -150,6 +150,8 @@
   "profileDatesByMonth": "Citas por mes",
   "profileMyAccount": "Mi cuenta",
   "profileSignOut": "Cerrar sesión",
+  "profileSignOutWarning": "Tendrás que volver a iniciar sesión en este dispositivo. Tus citas y tu racha no se tocan.",
+  "profileSignOutConfirm": "Cerrar sesión",
 
   "forgotTitle": "Recupera tu contraseña",
   "forgotBody": "Escribe tu correo y te enviamos un enlace para elegir una nueva.",
@@ -341,6 +343,7 @@
   "wishlistReopen": "Reabrir",
   "wishlistDelete": "Borrar",
   "wishlistDeletePlanned": "Este deseo ya está planificado. ¿Borrar de todos modos?",
+  "wishlistDeleteConfirm": "¿Borrar este deseo de la lista?",
 
   "wishNewTitle": "Agregar a la lista",
   "wishFieldTitle": "¿Qué quieren hacer?",

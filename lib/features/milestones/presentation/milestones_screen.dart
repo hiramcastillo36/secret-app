@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../application/milestones_controller.dart';
 import '../domain/models.dart';
 
@@ -21,7 +22,8 @@ class MilestonesScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.milestonesTitle)),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+        error: (_, __) =>
+            ErrorRetry(onRetry: () => ref.invalidate(milestonesProvider)),
         data: (board) {
           if (board.reached.isEmpty && board.next.isEmpty) {
             return Center(

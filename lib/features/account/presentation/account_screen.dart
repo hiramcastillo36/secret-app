@@ -8,6 +8,7 @@ import '../../../core/i18n/locale_controller.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../auth/application/auth.dart';
+import '../../common/error_retry.dart';
 import '../../common/settings_group.dart';
 import '../../common/status_pill.dart';
 import '../../profile/presentation/language_screen.dart';
@@ -25,7 +26,7 @@ class AccountScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.accountTitle)),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+        error: (_, __) => ErrorRetry(onRetry: () => ref.invalidate(meProvider)),
         data: (me) {
           final user = me.user;
           final dark = Theme.of(context).brightness == Brightness.dark;

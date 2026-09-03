@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../../dates/application/dates.dart';
 import '../application/protect.dart';
 
@@ -32,7 +33,12 @@ class ProtectScreen extends ConsumerWidget {
           error: (_, __) => ListView(
             children: [
               const SizedBox(height: 120),
-              Center(child: Text(l10n.commonSomethingWentWrong)),
+              ErrorRetry(
+                onRetry: () {
+                  ref.invalidate(protectHubProvider);
+                  ref.invalidate(streakProvider);
+                },
+              ),
             ],
           ),
           data: (h) => ListView(

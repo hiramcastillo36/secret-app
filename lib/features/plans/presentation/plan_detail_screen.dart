@@ -6,6 +6,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../auth/application/auth.dart';
+import '../../common/error_retry.dart';
 import '../../common/status_pill.dart';
 import '../../dates/application/dates.dart';
 import '../application/plans.dart';
@@ -42,7 +43,8 @@ class PlanDetailScreen extends ConsumerWidget {
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+        error: (_, __) =>
+            ErrorRetry(onRetry: () => ref.invalidate(planProvider(planId))),
         data: (plan) => _Body(plan: plan, myId: myId),
       ),
     );

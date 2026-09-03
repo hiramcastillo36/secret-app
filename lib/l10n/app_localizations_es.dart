@@ -452,6 +452,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileSignOut => 'Cerrar sesión';
 
   @override
+  String get profileSignOutWarning =>
+      'Tendrás que volver a iniciar sesión en este dispositivo. Tus citas y tu racha no se tocan.';
+
+  @override
+  String get profileSignOutConfirm => 'Cerrar sesión';
+
+  @override
   String get forgotTitle => 'Recupera tu contraseña';
 
   @override
@@ -994,6 +1001,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get wishlistDeletePlanned =>
       'Este deseo ya está planificado. ¿Borrar de todos modos?';
+
+  @override
+  String get wishlistDeleteConfirm => '¿Borrar este deseo de la lista?';
 
   @override
   String get wishNewTitle => 'Agregar a la lista';

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../../dates/presentation/date_format.dart';
 import '../../plans/domain/models.dart';
 import '../application/wishlist.dart';
@@ -57,7 +58,8 @@ class WishlistScreen extends ConsumerWidget {
         ),
         body: async.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+          error: (_, __) =>
+              ErrorRetry(onRetry: () => ref.invalidate(wishlistProvider)),
           data: (list) => TabBarView(
             children: [
               _WishTab(
@@ -145,27 +147,29 @@ class _WishTile extends ConsumerWidget {
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
-    var force = false;
-    if (item.status == 'planned') {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          content: Text(l10n.wishlistDeletePlanned),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(l10n.wishlistDelete),
-            ),
-          ],
+    // Always confirm; a planned wish gets the stronger warning (audit F,
+    // medium: a plain wish was deleted with no confirmation at all).
+    final planned = item.status == 'planned';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        content: Text(
+          planned ? l10n.wishlistDeletePlanned : l10n.wishlistDeleteConfirm,
         ),
-      );
-      if (ok != true) return;
-      force = true;
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.wishlistDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final force = planned;
     try {
       await ref
           .read(wishlistControllerProvider.notifier)

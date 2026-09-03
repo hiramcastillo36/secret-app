@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../application/privacy.dart';
 
 /// /profile/privacy — the handful of switches that change what the app shares,
@@ -40,7 +41,8 @@ class PrivacyScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.privacyTitle)),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+        error: (_, __) =>
+            ErrorRetry(onRetry: () => ref.invalidate(privacySettingsProvider)),
         data: (s) => ListView(
           padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
           children: [
