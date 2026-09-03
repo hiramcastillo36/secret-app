@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/format/money.dart';
 import '../../../theme/tokens.dart';
+import '../../common/osm_attribution.dart';
 import '../../common/section_label.dart';
 import '../application/dates.dart';
 import '../domain/models.dart';
@@ -315,10 +316,7 @@ class _MiniMap extends StatelessWidget {
                 ),
               ),
               children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'app.racha',
-                ),
+                osmTileLayer(),
                 MarkerLayer(
                   markers: [
                     Marker(
@@ -342,6 +340,9 @@ class _MiniMap extends StatelessWidget {
                   ),
                 ),
               ),
+            // On top of the InkWell so its "i" stays tappable; ODbL requires
+            // the attribution and its link even on this thumbnail (audit F-H9).
+            const OsmAttribution(),
           ],
         ),
       ),

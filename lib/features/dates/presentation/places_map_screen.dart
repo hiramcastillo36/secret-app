@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/osm_attribution.dart';
 import '../../plans/domain/models.dart';
 import '../../wishlist/application/wishlist.dart';
 import '../../wishlist/domain/models.dart';
@@ -134,11 +135,7 @@ class _PlacesMapScreenState extends ConsumerState<PlacesMapScreen> {
                     onTap: (_, __) => setState(() => _selectedId = null),
                   ),
                   children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'app.racha',
-                    ),
+                    osmTileLayer(),
                     MarkerLayer(
                       markers: _layer == _Layer.visited
                           ? [
@@ -180,11 +177,7 @@ class _PlacesMapScreenState extends ConsumerState<PlacesMapScreen> {
                                 ),
                             ],
                     ),
-                    const RichAttributionWidget(
-                      attributions: [
-                        TextSourceAttribution('OpenStreetMap contributors'),
-                      ],
-                    ),
+                    const OsmAttribution(),
                   ],
                 ),
               ),

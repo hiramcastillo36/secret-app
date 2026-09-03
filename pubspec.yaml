@@ -26,7 +26,12 @@ dependencies:
 
   # Map (OpenStreetMap tiles, no Google Maps SDK)
   flutter_map: ^7.0.2
+  flutter_map_cache: ^2.1.0
+  dio_cache_interceptor: ^4.0.7
   latlong2: ^0.9.1
+
+  # Opening the OSM copyright page from the map attribution (ODbL requirement)
+  url_launcher: ^6.3.0
 
   # i18n formatting
   intl: any
