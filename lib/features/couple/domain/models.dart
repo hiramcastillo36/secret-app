@@ -1,5 +1,5 @@
-// Plain models for the couple feature (freezed migration comes with the shared
-// models task).
+// Plain hand-written models for the couple feature. Every fromJson tolerates a
+// missing or null field rather than throwing.
 
 class Couple {
   const Couple({
@@ -7,7 +7,6 @@ class Couple {
     required this.name,
     required this.status,
     required this.timezone,
-    required this.weekStart,
     this.inviteCode,
     this.startedAt,
   });
@@ -16,7 +15,6 @@ class Couple {
   final String name;
   final String status; // pending | active | closed
   final String timezone;
-  final String weekStart;
   final String? inviteCode; // only present while pending
   final DateTime? startedAt;
 
@@ -24,16 +22,15 @@ class Couple {
   bool get isActive => status == 'active';
 
   factory Couple.fromJson(Map<String, dynamic> json) => Couple(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        status: json['status'] as String,
-        timezone: json['timezone'] as String,
-        weekStart: (json['week_start'] ?? 'monday') as String,
-        inviteCode: json['invite_code'] as String?,
-        startedAt: json['started_at'] == null
-            ? null
-            : DateTime.parse(json['started_at'] as String),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    status: json['status'] as String,
+    timezone: json['timezone'] as String,
+    inviteCode: json['invite_code'] as String?,
+    startedAt: json['started_at'] == null
+        ? null
+        : DateTime.parse(json['started_at'] as String),
+  );
 }
 
 class CoupleMember {
@@ -50,11 +47,11 @@ class CoupleMember {
   final String? avatarUrl;
 
   factory CoupleMember.fromJson(Map<String, dynamic> json) => CoupleMember(
-        userId: json['user_id'] as String,
-        displayName: json['display_name'] as String,
-        role: json['role'] as String,
-        avatarUrl: json['avatar_url'] as String?,
-      );
+    userId: json['user_id'] as String,
+    displayName: json['display_name'] as String,
+    role: json['role'] as String,
+    avatarUrl: json['avatar_url'] as String?,
+  );
 }
 
 class CoupleView {
@@ -64,11 +61,11 @@ class CoupleView {
   final List<CoupleMember> members;
 
   factory CoupleView.fromJson(Map<String, dynamic> json) => CoupleView(
-        couple: Couple.fromJson((json['couple'] as Map).cast<String, dynamic>()),
-        members: ((json['members'] as List?) ?? const [])
-            .map((e) => CoupleMember.fromJson((e as Map).cast<String, dynamic>()))
-            .toList(),
-      );
+    couple: Couple.fromJson((json['couple'] as Map).cast<String, dynamic>()),
+    members: ((json['members'] as List?) ?? const [])
+        .map((e) => CoupleMember.fromJson((e as Map).cast<String, dynamic>()))
+        .toList(),
+  );
 }
 
 class JoinResult {
@@ -78,8 +75,9 @@ class JoinResult {
   final CoupleMember partner;
 
   factory JoinResult.fromJson(Map<String, dynamic> json) => JoinResult(
-        couple: Couple.fromJson((json['couple'] as Map).cast<String, dynamic>()),
-        partner:
-            CoupleMember.fromJson((json['partner'] as Map).cast<String, dynamic>()),
-      );
+    couple: Couple.fromJson((json['couple'] as Map).cast<String, dynamic>()),
+    partner: CoupleMember.fromJson(
+      (json['partner'] as Map).cast<String, dynamic>(),
+    ),
+  );
 }

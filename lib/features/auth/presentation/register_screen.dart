@@ -24,6 +24,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _submitted = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Drop any error left over from the login screen — they share the
+    // controller (audit F-H11).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(authControllerProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     _email.dispose();
@@ -36,7 +46,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _submit() async {
     setState(() => _submitted = true);
     if (!_formKey.currentState!.validate()) return;
-    final session = await ref.read(authControllerProvider.notifier).register(
+    final session = await ref
+        .read(authControllerProvider.notifier)
+        .register(
           email: _email.text.trim(),
           password: _password.text,
           displayName: _name.text.trim(),
@@ -57,7 +69,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AuthHero(title: l10n.registerTitle, subtitle: l10n.registerSubtitle),
+            AuthHero(
+              title: l10n.registerTitle,
+              subtitle: l10n.registerSubtitle,
+            ),
             Padding(
               padding: const EdgeInsets.all(RachaTokens.space5),
               child: Form(
@@ -72,9 +87,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _name,
                       textCapitalization: TextCapitalization.words,
                       autofillHints: const [AutofillHints.name],
-                      decoration: InputDecoration(labelText: l10n.commonDisplayName),
-                      validator: (v) =>
-                          (v ?? '').trim().isEmpty ? l10n.validationNameRequired : null,
+                      decoration: InputDecoration(
+                        labelText: l10n.commonDisplayName,
+                      ),
+                      validator: (v) => (v ?? '').trim().isEmpty
+                          ? l10n.validationNameRequired
+                          : null,
                     ),
                     const SizedBox(height: RachaTokens.space3),
                     TextFormField(
@@ -101,8 +119,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         labelText: l10n.commonPassword,
                         helperText: l10n.registerPasswordHint,
                       ),
-                      validator: (v) =>
-                          (v ?? '').length < 8 ? l10n.validationPasswordTooShort : null,
+                      validator: (v) => (v ?? '').length < 8
+                          ? l10n.validationPasswordTooShort
+                          : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     PasswordMeter(password: _password.text),
@@ -113,12 +132,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: RachaTokens.space5),
                     FilledButton(
                       onPressed: (loading || !_passwordOk) ? null : _submit,
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
                       child: loading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : Text(l10n.registerSubmit),
                     ),
                     const SizedBox(height: RachaTokens.space2),
@@ -149,7 +171,10 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.errorContainer,
         borderRadius: RachaTokens.brS,
-        border: Border.all(color: scheme.error, width: RachaTokens.borderHairline),
+        border: Border.all(
+          color: scheme.error,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       child: Text(text, style: TextStyle(color: scheme.onErrorContainer)),
     );

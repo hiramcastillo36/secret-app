@@ -9,7 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/section_label.dart';
 import '../../common/step_bar.dart';
-import '../data/dates_repository.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
 
@@ -59,17 +59,23 @@ class _PlaceSearchScreenState extends ConsumerState<PlaceSearchScreen> {
 
   Future<void> _run(String q) async {
     try {
-      final res = await ref.read(datesRepositoryProvider).searchPlaces(q);
-      if (!mounted) return;
+      final res = await ref
+          .read(datesControllerProvider.notifier)
+          .searchPlaces(q);
+      // Drop a slow response for a query the user has already moved past, so it
+      // can't overwrite fresher results (audit F, medium: no sequence guard).
+      if (!mounted || q != _controller.text.trim()) return;
       setState(() {
         _results = res.results;
         _error = null;
         _loading = false;
       });
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted || q != _controller.text.trim()) return;
       setState(() {
-        _error = e.isNetwork ? AppLocalizations.of(context).dateNewOffline : e.message;
+        _error = e.isNetwork
+            ? AppLocalizations.of(context).dateNewOffline
+            : e.localizedMessage(context);
         _loading = false;
       });
     }
@@ -83,7 +89,8 @@ class _PlaceSearchScreenState extends ConsumerState<PlaceSearchScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final recent = ref.watch(summaryPlacesProvider).valueOrNull?.places ?? const [];
+    final recent =
+        ref.watch(summaryPlacesProvider).valueOrNull?.places ?? const [];
 
     return Scaffold(
       appBar: AppBar(
@@ -95,8 +102,12 @@ class _PlaceSearchScreenState extends ConsumerState<PlaceSearchScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(RachaTokens.space4, RachaTokens.space3,
-                  RachaTokens.space4, RachaTokens.space2),
+              padding: const EdgeInsets.fromLTRB(
+                RachaTokens.space4,
+                RachaTokens.space3,
+                RachaTokens.space4,
+                RachaTokens.space2,
+              ),
               child: TextField(
                 controller: _controller,
                 autofocus: true,
@@ -108,16 +119,19 @@ class _PlaceSearchScreenState extends ConsumerState<PlaceSearchScreen> {
                       ? const Padding(
                           padding: EdgeInsets.all(12),
                           child: SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2)),
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         )
                       : null,
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: RachaTokens.space4,
+              ),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: ActionChip(
@@ -141,24 +155,24 @@ class _PlaceSearchScreenState extends ConsumerState<PlaceSearchScreen> {
                       onPick: _pick,
                     )
                   : recent.isEmpty
-                      ? const SizedBox.shrink()
-                      : _ResultList(
-                          header: l10n.dateNewRecent,
-                          places: [
-                            for (final p in recent.take(6))
-                              Place(
-                                id: p.placeId,
-                                name: p.name,
-                                category: p.category,
-                                lat: p.lat,
-                                lng: p.lng,
-                              ),
-                          ],
-                          onPick: _pick,
-                          trailingVisits: {
-                            for (final p in recent.take(6)) p.placeId: p.visits,
-                          },
-                        ),
+                  ? const SizedBox.shrink()
+                  : _ResultList(
+                      header: l10n.dateNewRecent,
+                      places: [
+                        for (final p in recent.take(6))
+                          Place(
+                            id: p.placeId,
+                            name: p.name,
+                            category: p.category,
+                            lat: p.lat,
+                            lng: p.lng,
+                          ),
+                      ],
+                      onPick: _pick,
+                      trailingVisits: {
+                        for (final p in recent.take(6)) p.placeId: p.visits,
+                      },
+                    ),
             ),
           ],
         ),
@@ -187,7 +201,11 @@ class _ResultList extends StatelessWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          RachaTokens.space4, 0, RachaTokens.space4, RachaTokens.space7),
+        RachaTokens.space4,
+        0,
+        RachaTokens.space4,
+        RachaTokens.space7,
+      ),
       children: [
         SectionLabel(header),
         const SizedBox(height: RachaTokens.space2),
@@ -200,7 +218,9 @@ class _ResultList extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: RachaTokens.brM,
                 side: BorderSide(
-                    color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                  color: scheme.outlineVariant,
+                  width: RachaTokens.borderHairline,
+                ),
               ),
               child: ListTile(
                 leading: Container(
@@ -210,11 +230,19 @@ class _ResultList extends StatelessWidget {
                     color: scheme.primaryContainer,
                     borderRadius: RachaTokens.brS,
                   ),
-                  child: Icon(categoryIcon(p.category),
-                      size: 20, color: scheme.onPrimaryContainer),
+                  child: Icon(
+                    categoryIcon(p.category),
+                    size: 20,
+                    color: scheme.onPrimaryContainer,
+                  ),
                 ),
-                title: Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: (p.address == null && !trailingVisits.containsKey(p.id))
+                title: Text(
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle:
+                    (p.address == null && !trailingVisits.containsKey(p.id))
                     ? null
                     : Text(
                         trailingVisits.containsKey(p.id)

@@ -5,9 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/empty_state.dart';
+import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
 import '../../dates/presentation/date_format.dart';
 import '../../plans/domain/models.dart';
-import '../data/wishlist_repository.dart';
+import '../application/wishlist.dart';
 import '../domain/models.dart';
 
 /// /wishlist — places and ideas the couple wants to do. Tabs by status; from a
@@ -40,11 +43,13 @@ class WishlistScreen extends ConsumerWidget {
               icon: const Icon(Icons.casino_outlined),
             ),
           ],
-          bottom: TabBar(tabs: [
-            Tab(text: l10n.wishlistTabOpen),
-            Tab(text: l10n.wishlistTabPlanned),
-            Tab(text: l10n.wishlistTabDone),
-          ]),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: l10n.wishlistTabOpen),
+              Tab(text: l10n.wishlistTabPlanned),
+              Tab(text: l10n.wishlistTabDone),
+            ],
+          ),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
@@ -54,13 +59,20 @@ class WishlistScreen extends ConsumerWidget {
           child: const Icon(Icons.add),
         ),
         body: async.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+          loading: () => const SkeletonList(),
+          error: (_, __) =>
+              ErrorRetry(onRetry: () => ref.invalidate(wishlistProvider)),
           data: (list) => TabBarView(
             children: [
-              _WishTab(items: list.items.where((i) => i.status == 'open').toList()),
-              _WishTab(items: list.items.where((i) => i.status == 'planned').toList()),
-              _WishTab(items: list.items.where((i) => i.status == 'done').toList()),
+              _WishTab(
+                items: list.items.where((i) => i.status == 'open').toList(),
+              ),
+              _WishTab(
+                items: list.items.where((i) => i.status == 'planned').toList(),
+              ),
+              _WishTab(
+                items: list.items.where((i) => i.status == 'done').toList(),
+              ),
             ],
           ),
         ),
@@ -77,11 +89,14 @@ class _WishTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     if (items.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(RachaTokens.space6),
-          child: Text(l10n.wishlistEmpty, textAlign: TextAlign.center),
-        ),
+      return EmptyState(
+        icon: Icons.favorite_border,
+        text: l10n.wishlistEmpty,
+        actionLabel: l10n.wishlistAdd,
+        onAction: () async {
+          await context.push('/wishlist/new');
+          ref.invalidate(wishlistProvider);
+        },
       );
     }
     return ListView.builder(
@@ -96,63 +111,79 @@ class _WishTab extends ConsumerWidget {
 }
 
 String costBandLabel(AppLocalizations l10n, String? band) => switch (band) {
-      'free' => l10n.wishCostFree,
-      'low' => '\$',
-      'mid' => '\$\$',
-      'high' => '\$\$\$',
-      _ => '',
-    };
+  'free' => l10n.wishCostFree,
+  'low' => '\$',
+  'mid' => '\$\$',
+  'high' => '\$\$\$',
+  _ => '',
+};
 
 class _WishTile extends ConsumerWidget {
   const _WishTile({required this.item});
   final WishItem item;
 
   Future<void> _plan(BuildContext context, WidgetRef ref) async {
-    await context.push('/plans/new',
-        extra: PlanSeed(
-          title: item.title,
-          placeId: item.placeId,
-          placeName: item.placeName,
-          wishlistItemId: item.id,
-        ));
+    await context.push(
+      '/plans/new',
+      extra: PlanSeed(
+        title: item.title,
+        placeId: item.placeId,
+        placeName: item.placeName,
+        wishlistItemId: item.id,
+      ),
+    );
     ref.invalidate(wishlistProvider);
   }
 
   Future<void> _toggleDone(BuildContext context, WidgetRef ref) async {
     final next = item.status == 'done' ? 'open' : 'done';
     try {
-      await ref.read(wishlistRepositoryProvider).patch(item.id, status: next);
-      ref.invalidate(wishlistProvider);
+      await ref
+          .read(wishlistControllerProvider.notifier)
+          .setStatus(item.id, next);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     }
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
-    var force = false;
-    if (item.status == 'planned') {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          content: Text(l10n.wishlistDeletePlanned),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.commonCancel)),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.wishlistDelete)),
-          ],
+    // Always confirm; a planned wish gets the stronger warning (audit F,
+    // medium: a plain wish was deleted with no confirmation at all).
+    final planned = item.status == 'planned';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        content: Text(
+          planned ? l10n.wishlistDeletePlanned : l10n.wishlistDeleteConfirm,
         ),
-      );
-      if (ok != true) return;
-      force = true;
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.wishlistDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final force = planned;
     try {
-      await ref.read(wishlistRepositoryProvider).delete(item.id, force: force);
-      ref.invalidate(wishlistProvider);
+      await ref
+          .read(wishlistControllerProvider.notifier)
+          .delete(item.id, force: force);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
       }
     }
   }
@@ -167,7 +198,10 @@ class _WishTile extends ConsumerWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: RachaTokens.brM,
-        border: Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+        border: Border.all(
+          color: scheme.outlineVariant,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       padding: const EdgeInsets.all(RachaTokens.space3),
       child: Row(
@@ -193,28 +227,43 @@ class _WishTile extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  item.title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 if (item.placeName != null || item.note != null) ...[
                   const SizedBox(height: 2),
-                  Text(item.placeName ?? item.note!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                  Text(
+                    item.placeName ?? item.note!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: RachaType.caption,
+                    ),
+                  ),
                 ],
                 if (band.isNotEmpty) ...[
                   const SizedBox(height: RachaTokens.space2),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space2, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: RachaTokens.space2,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(RachaTokens.radiusFull),
+                      borderRadius: BorderRadius.circular(
+                        RachaTokens.radiusFull,
+                      ),
                     ),
-                    child: Text(band,
-                        style: TextStyle(
-                            color: scheme.onPrimaryContainer,
-                            fontSize: RachaType.micro,
-                            fontWeight: FontWeight.w700)),
+                    child: Text(
+                      band,
+                      style: TextStyle(
+                        color: scheme.onPrimaryContainer,
+                        fontSize: RachaType.micro,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ],
@@ -229,7 +278,9 @@ class _WishTile extends ConsumerWidget {
                   onPressed: () => _plan(context, ref),
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: RachaTokens.space3,
+                    ),
                   ),
                   child: Text(l10n.wishlistPlanThis),
                 ),
@@ -244,11 +295,17 @@ class _WishTile extends ConsumerWidget {
                 },
                 itemBuilder: (_) => [
                   PopupMenuItem(
-                      value: 'done',
-                      child: Text(item.status == 'done'
+                    value: 'done',
+                    child: Text(
+                      item.status == 'done'
                           ? l10n.wishlistReopen
-                          : l10n.wishlistMarkDone)),
-                  PopupMenuItem(value: 'delete', child: Text(l10n.wishlistDelete)),
+                          : l10n.wishlistMarkDone,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l10n.wishlistDelete),
+                  ),
                 ],
               ),
             ],

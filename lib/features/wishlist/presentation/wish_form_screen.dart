@@ -7,7 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../dates/domain/models.dart';
 import '../../dates/presentation/place_picker_sheet.dart';
-import '../data/wishlist_repository.dart';
+import '../application/wishlist.dart';
 
 /// /wishlist/new — a place or an idea. Only the title is required.
 class WishFormScreen extends ConsumerStatefulWidget {
@@ -48,18 +48,21 @@ class _WishFormScreenState extends ConsumerState<WishFormScreen> {
       _error = null;
     });
     try {
-      await ref.read(wishlistRepositoryProvider).create(
+      await ref
+          .read(wishlistControllerProvider.notifier)
+          .create(
             title: _title.text.trim(),
             placeId: _place?.id,
             note: _note.text.trim(),
             costBand: _cost,
           );
       if (!mounted) return;
-      ref.invalidate(wishlistProvider);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.wishSaved)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.wishSaved)));
       context.pop();
     } on ApiException catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (mounted) setState(() => _error = e.localizedMessage(context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -89,9 +92,13 @@ class _WishFormScreenState extends ConsumerState<WishFormScreen> {
                     },
                   ),
                   const SizedBox(height: RachaTokens.space5),
-                  Text(l10n.wishFieldCost,
-                      style: const TextStyle(
-                          fontSize: RachaType.callout, fontWeight: FontWeight.w600)),
+                  Text(
+                    l10n.wishFieldCost,
+                    style: const TextStyle(
+                      fontSize: RachaType.callout,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: RachaTokens.space2),
                   Wrap(
                     spacing: RachaTokens.space2,
@@ -105,14 +112,19 @@ class _WishFormScreenState extends ConsumerState<WishFormScreen> {
                         ChoiceChip(
                           label: Text(e.$2),
                           selected: _cost == e.$1,
-                          onSelected: (v) => setState(() => _cost = v ? e.$1 : null),
+                          onSelected: (v) =>
+                              setState(() => _cost = v ? e.$1 : null),
                         ),
                     ],
                   ),
                   const SizedBox(height: RachaTokens.space5),
-                  Text(l10n.wishFieldPlace,
-                      style: const TextStyle(
-                          fontSize: RachaType.callout, fontWeight: FontWeight.w600)),
+                  Text(
+                    l10n.wishFieldPlace,
+                    style: const TextStyle(
+                      fontSize: RachaType.callout,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: RachaTokens.space2),
                   OutlinedButton.icon(
                     onPressed: _pickPlace,
@@ -147,14 +159,19 @@ class _WishFormScreenState extends ConsumerState<WishFormScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                      color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                    color: scheme.outlineVariant,
+                    width: RachaTokens.borderHairline,
+                  ),
                 ),
               ),
               child: FilledButton(
                 onPressed: _busy ? null : _save,
                 child: _busy
                     ? const SizedBox(
-                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(l10n.commonSave),
               ),
             ),

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../data/dates_repository.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
 
@@ -53,8 +53,12 @@ class _PlacePickerSheetState extends ConsumerState<PlacePickerSheet> {
     setState(() => _loading = true);
     _debounce = Timer(const Duration(milliseconds: 400), () async {
       try {
-        final res = await ref.read(datesRepositoryProvider).searchPlaces(q);
-        if (mounted) {
+        final res = await ref
+            .read(datesControllerProvider.notifier)
+            .searchPlaces(q);
+        // Ignore a stale response for a query the user moved past (audit F,
+        // medium: no sequence guard).
+        if (mounted && q == _controller.text.trim()) {
           setState(() {
             _results = res.results;
             _loading = false;
@@ -105,7 +109,9 @@ class _PlacePickerSheetState extends ConsumerState<PlacePickerSheet> {
               children: [
                 for (final p in _results)
                   ListTile(
-                    shape: const RoundedRectangleBorder(borderRadius: RachaTokens.brM),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: RachaTokens.brM,
+                    ),
                     leading: Container(
                       height: 40,
                       width: 40,
@@ -113,14 +119,20 @@ class _PlacePickerSheetState extends ConsumerState<PlacePickerSheet> {
                         color: Theme.of(context).colorScheme.primaryContainer,
                         borderRadius: RachaTokens.brS,
                       ),
-                      child: Icon(categoryIcon(p.category),
-                          size: 20,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer),
+                      child: Icon(
+                        categoryIcon(p.category),
+                        size: 20,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                     ),
                     title: Text(p.name),
                     subtitle: p.address == null
                         ? null
-                        : Text(p.address!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        : Text(
+                            p.address!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                     onTap: () => Navigator.of(context).pop(p),
                   ),
               ],

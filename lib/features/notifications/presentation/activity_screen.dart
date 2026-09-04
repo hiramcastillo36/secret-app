@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../dates/presentation/date_format.dart';
-import '../data/notifications_repository.dart';
+import '../application/notifications.dart';
 
 /// /activity — the in-app notification centre: reminders and partner activity,
 /// newest first, cursor-paginated. Opening the screen marks everything read and
@@ -36,8 +36,8 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
       _error = null;
     });
     try {
-      final repo = ref.read(notificationsRepositoryProvider);
-      final page = await repo.history();
+      final c = ref.read(notificationsControllerProvider.notifier);
+      final page = await c.history();
       if (!mounted) return;
       setState(() {
         _items
@@ -48,8 +48,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
       });
       // Opening the centre counts as seeing everything.
       if (page.unread > 0) {
-        await repo.markAllRead();
-        ref.invalidate(unreadNotificationsProvider);
+        await c.markAllRead();
         if (mounted) {
           setState(() {
             for (var i = 0; i < _items.length; i++) {
@@ -72,27 +71,41 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
     if (_loadingMore || _cursor == null) return;
     setState(() => _loadingMore = true);
     try {
-      final page =
-          await ref.read(notificationsRepositoryProvider).history(cursor: _cursor);
+      final page = await ref
+          .read(notificationsControllerProvider.notifier)
+          .history(cursor: _cursor);
       if (!mounted) return;
       setState(() {
         _items.addAll(page.items);
         _cursor = page.nextCursor;
       });
+    } catch (_) {
+      // Without this the failure was swallowed and "load more" just went
+      // quiet (audit F, low: finally with no catch). The cursor is kept so
+      // the next scroll / tap retries.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).commonSomethingWentWrong,
+            ),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loadingMore = false);
     }
   }
 
   static AppNotification _read(AppNotification n) => AppNotification(
-        id: n.id,
-        kind: n.kind,
-        title: n.title,
-        body: n.body,
-        route: n.route,
-        read: true,
-        createdAt: n.createdAt,
-      );
+    id: n.id,
+    kind: n.kind,
+    title: n.title,
+    body: n.body,
+    route: n.route,
+    read: true,
+    createdAt: n.createdAt,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -100,10 +113,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.activityTitle)),
-      body: RefreshIndicator(
-        onRefresh: _loadFirst,
-        child: _buildBody(l10n),
-      ),
+      body: RefreshIndicator(onRefresh: _loadFirst, child: _buildBody(l10n)),
     );
   }
 
@@ -132,8 +142,14 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
             child: Center(
               child: _loadingMore
                   ? const SizedBox(
-                      height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : TextButton(onPressed: _loadMore, child: Text(l10n.activityLoadMore)),
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : TextButton(
+                      onPressed: _loadMore,
+                      child: Text(l10n.activityLoadMore),
+                    ),
             ),
           );
         }
@@ -151,13 +167,13 @@ class _NotificationTile extends StatelessWidget {
   final AppNotification item;
 
   IconData get _icon => switch (item.kind) {
-        'streak_advanced' => Icons.local_fire_department_outlined,
-        'streak_at_risk' => Icons.event_available_outlined,
-        'tag_pending' => Icons.how_to_reg_outlined,
-        'partner_activity' => Icons.favorite_outline,
-        'weekly_recap' => Icons.insights_outlined,
-        _ => Icons.notifications_outlined,
-      };
+    'streak_advanced' => Icons.local_fire_department_outlined,
+    'streak_at_risk' => Icons.event_available_outlined,
+    'tag_pending' => Icons.how_to_reg_outlined,
+    'partner_activity' => Icons.favorite_outline,
+    'weekly_recap' => Icons.insights_outlined,
+    _ => Icons.notifications_outlined,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +184,10 @@ class _NotificationTile extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: RachaTokens.brM,
-        side: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+        side: BorderSide(
+          color: scheme.outlineVariant,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       child: InkWell(
         onTap: () => context.push(item.route),
@@ -185,8 +204,10 @@ class _NotificationTile extends StatelessWidget {
                         child: Container(
                           width: 6,
                           height: 6,
-                          decoration:
-                              BoxDecoration(shape: BoxShape.circle, color: scheme.primary),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: scheme.primary,
+                          ),
                         ),
                       )
                     : null,
@@ -196,31 +217,48 @@ class _NotificationTile extends StatelessWidget {
                 height: 40,
                 width: 40,
                 decoration: BoxDecoration(
-                  color: unread ? scheme.primaryContainer : scheme.surfaceContainerHighest,
+                  color: unread
+                      ? scheme.primaryContainer
+                      : scheme.surfaceContainerHighest,
                   borderRadius: RachaTokens.brS,
                 ),
-                child: Icon(_icon,
-                    size: 20,
-                    color: unread ? scheme.onPrimaryContainer : scheme.onSurfaceVariant),
+                child: Icon(
+                  _icon,
+                  size: 20,
+                  color: unread
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: RachaTokens.space3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.title,
-                        style: TextStyle(
-                            fontWeight: unread ? FontWeight.w700 : FontWeight.w500)),
+                    Text(
+                      item.title,
+                      style: TextStyle(
+                        fontWeight: unread ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
                     if (item.body.isNotEmpty) ...[
                       const SizedBox(height: 2),
-                      Text(item.body,
-                          style: TextStyle(
-                              color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                      Text(
+                        item.body,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: RachaType.caption,
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 2),
-                    Text(relativeDay(context, item.createdAt),
-                        style: TextStyle(
-                            color: scheme.onSurfaceVariant, fontSize: RachaType.micro)),
+                    Text(
+                      relativeDay(context, item.createdAt),
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: RachaType.micro,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -242,11 +280,19 @@ class _EmptyState extends StatelessWidget {
     return ListView(
       children: [
         const SizedBox(height: 120),
-        Icon(Icons.notifications_none_outlined, size: 48, color: scheme.onSurfaceVariant),
+        Icon(
+          Icons.notifications_none_outlined,
+          size: 48,
+          color: scheme.onSurfaceVariant,
+        ),
         const SizedBox(height: RachaTokens.space4),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space6),
-          child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: scheme.onSurfaceVariant)),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
         ),
       ],
     );
@@ -254,7 +300,11 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _CenteredRetry extends StatelessWidget {
-  const _CenteredRetry({required this.message, required this.retryLabel, required this.onRetry});
+  const _CenteredRetry({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
   final String message;
   final String retryLabel;
   final VoidCallback onRetry;
@@ -266,7 +316,9 @@ class _CenteredRetry extends StatelessWidget {
         const SizedBox(height: 140),
         Center(child: Text(message, textAlign: TextAlign.center)),
         const SizedBox(height: RachaTokens.space2),
-        Center(child: TextButton(onPressed: onRetry, child: Text(retryLabel))),
+        Center(
+          child: TextButton(onPressed: onRetry, child: Text(retryLabel)),
+        ),
       ],
     );
   }

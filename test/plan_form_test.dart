@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:racha/l10n/app_localizations.dart';
 import 'package:racha/features/plans/presentation/plan_form_screen.dart';
+import 'package:racha/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('plan form requires a title before it will save', (tester) async {
@@ -15,14 +14,16 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(ProviderScope(
-      child: MaterialApp.router(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('es'),
-        routerConfig: router,
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('es'),
+          routerConfig: router,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     // With no date the primary action is "Guardar idea" and the date toggle is off.

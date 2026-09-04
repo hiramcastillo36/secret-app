@@ -32,8 +32,12 @@ class AuthHero extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(RachaTokens.space5, RachaTokens.space2,
-              RachaTokens.space5, RachaTokens.space6),
+          padding: const EdgeInsets.fromLTRB(
+            RachaTokens.space5,
+            RachaTokens.space2,
+            RachaTokens.space5,
+            RachaTokens.space6,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -43,8 +47,14 @@ class AuthHero extends StatelessWidget {
                     ? Align(
                         alignment: Alignment.centerLeft,
                         child: IconButton(
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).backButtonTooltip,
                           onPressed: () => Navigator.of(context).maybePop(),
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           style: IconButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: const Size(40, 40),
@@ -60,7 +70,9 @@ class AuthHero extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12),
                   borderRadius: RachaTokens.brL,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                  ),
                 ),
                 child: Icon(icon, color: Colors.white, size: 32),
               ),

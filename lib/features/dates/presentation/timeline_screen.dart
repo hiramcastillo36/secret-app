@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/format/money.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../data/dates_repository.dart';
+import '../../common/empty_state.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
 
@@ -56,7 +58,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       _error = null;
     });
     try {
-      final page = await ref.read(datesRepositoryProvider).list(cursor: _cursor, limit: 20);
+      final page = await ref
+          .read(datesControllerProvider.notifier)
+          .list(cursor: _cursor, limit: 20);
       if (!mounted) return;
       setState(() {
         _dates.addAll(page.dates);
@@ -67,7 +71,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.isNetwork ? AppLocalizations.of(context).commonNoConnection : e.message;
+        _error = e.isNetwork
+            ? AppLocalizations.of(context).commonNoConnection
+            : e.localizedMessage(context);
         _loading = false;
       });
     }
@@ -86,9 +92,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     if (_query.isEmpty) return _dates;
     final q = _query.toLowerCase();
     return _dates
-        .where((d) =>
-            d.title.toLowerCase().contains(q) ||
-            (d.place?.name.toLowerCase().contains(q) ?? false))
+        .where(
+          (d) =>
+              d.title.toLowerCase().contains(q) ||
+              (d.place?.name.toLowerCase().contains(q) ?? false),
+        )
         .toList();
   }
 
@@ -109,7 +117,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: RachaTokens.space3, vertical: 2),
+                    horizontal: RachaTokens.space3,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(RachaTokens.radiusFull),
@@ -117,9 +127,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   child: Text(
                     l10n.timelineCount(_dates.length) + (_done ? '' : '+'),
                     style: TextStyle(
-                        color: scheme.onPrimaryContainer,
-                        fontSize: RachaType.caption,
-                        fontWeight: FontWeight.w700),
+                      color: scheme.onPrimaryContainer,
+                      fontSize: RachaType.caption,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -128,8 +139,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(RachaTokens.space4, 0,
-                RachaTokens.space4, RachaTokens.space3),
+            padding: const EdgeInsets.fromLTRB(
+              RachaTokens.space4,
+              0,
+              RachaTokens.space4,
+              RachaTokens.space3,
+            ),
             child: TextField(
               controller: _searchCtrl,
               onChanged: (v) => setState(() => _query = v.trim()),
@@ -140,6 +155,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 suffixIcon: _query.isEmpty
                     ? null
                     : IconButton(
+                        tooltip: l10n.a11yClearSearch,
                         icon: const Icon(Icons.close, size: 18),
                         onPressed: () {
                           _searchCtrl.clear();
@@ -157,10 +173,15 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             ? ListView(
                 children: [
                   const SizedBox(height: RachaTokens.space7),
-                  Center(
-                    child: Text(_query.isEmpty ? l10n.timelineEmpty : l10n.timelineNoMatch),
-                  ),
-                  if (_query.isNotEmpty)
+                  if (_query.isEmpty)
+                    EmptyState(
+                      icon: Icons.favorite_border,
+                      text: l10n.timelineEmpty,
+                      actionLabel: l10n.homeLogDate,
+                      onAction: () => context.push('/dates/new'),
+                    )
+                  else ...[
+                    Center(child: Text(l10n.timelineNoMatch)),
                     Center(
                       child: TextButton(
                         onPressed: () {
@@ -170,22 +191,32 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                         child: Text(l10n.timelineClearSearch),
                       ),
                     ),
+                  ],
                 ],
               )
             : ListView.builder(
                 controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(RachaTokens.space4, RachaTokens.space4,
-                    RachaTokens.space4, RachaTokens.space7 + RachaTokens.space5),
+                padding: const EdgeInsets.fromLTRB(
+                  RachaTokens.space4,
+                  RachaTokens.space4,
+                  RachaTokens.space4,
+                  RachaTokens.space7 + RachaTokens.space5,
+                ),
                 itemCount: visible.length + 1,
                 itemBuilder: (context, i) {
                   if (i == visible.length) {
                     if (_error != null) {
                       return Padding(
                         padding: const EdgeInsets.all(RachaTokens.space4),
-                        child: Column(children: [
-                          Text(_error!),
-                          TextButton(onPressed: _loadMore, child: Text(l10n.commonRetry)),
-                        ]),
+                        child: Column(
+                          children: [
+                            Text(_error!),
+                            TextButton(
+                              onPressed: _loadMore,
+                              child: Text(l10n.commonRetry),
+                            ),
+                          ],
+                        ),
                       );
                     }
                     if (_loading && _query.isEmpty) {
@@ -231,7 +262,10 @@ class _TimelineRow extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: scheme.primary,
-                    border: Border.all(color: scheme.primaryContainer, width: 2),
+                    border: Border.all(
+                      color: scheme.primaryContainer,
+                      width: 2,
+                    ),
                   ),
                 ),
                 if (!isLast)
@@ -271,7 +305,10 @@ class _TimelineCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: RachaTokens.brM,
-        side: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+        side: BorderSide(
+          color: scheme.outlineVariant,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       child: InkWell(
         onTap: () => context.push('/dates/${date.id}'),
@@ -283,11 +320,15 @@ class _TimelineCard extends StatelessWidget {
               height: 56,
               width: double.infinity,
               color: scheme.primaryContainer,
-              padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space3),
+              padding: const EdgeInsets.symmetric(
+                horizontal: RachaTokens.space3,
+              ),
               child: Row(
                 children: [
-                  Icon(categoryIcon(date.place?.category ?? 'other'),
-                      color: scheme.onPrimaryContainer),
+                  Icon(
+                    categoryIcon(date.place?.category ?? 'other'),
+                    color: scheme.onPrimaryContainer,
+                  ),
                   const Spacer(),
                   for (final p in date.participants.take(3))
                     Padding(
@@ -298,9 +339,10 @@ class _TimelineCard extends StatelessWidget {
                         child: Text(
                           _initial(p.displayName),
                           style: TextStyle(
-                              fontSize: RachaType.micro,
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurface),
+                            fontSize: RachaType.micro,
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurface,
+                          ),
                         ),
                       ),
                     ),
@@ -319,24 +361,36 @@ class _TimelineCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(date.title,
-                                style: const TextStyle(
-                                    fontSize: RachaType.body, fontWeight: FontWeight.w700)),
+                            Text(
+                              date.title,
+                              style: const TextStyle(
+                                fontSize: RachaType.body,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             if (date.place != null) ...[
                               const SizedBox(height: 2),
-                              Row(children: [
-                                Icon(Icons.place_outlined,
-                                    size: 12, color: scheme.onSurfaceVariant),
-                                const SizedBox(width: 2),
-                                Expanded(
-                                  child: Text(date.place!.name,
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.place_outlined,
+                                    size: 12,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Expanded(
+                                    child: Text(
+                                      date.place!.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                          color: scheme.onSurfaceVariant,
-                                          fontSize: RachaType.caption)),
-                                ),
-                              ]),
+                                        color: scheme.onSurfaceVariant,
+                                        fontSize: RachaType.caption,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ],
                         ),
@@ -345,10 +399,13 @@ class _TimelineCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(relativeDay(context, date.happenedAt),
-                              style: TextStyle(
-                                  color: scheme.onSurfaceVariant,
-                                  fontSize: RachaType.caption)),
+                          Text(
+                            relativeDay(context, date.happenedAt),
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: RachaType.caption,
+                            ),
+                          ),
                           if (date.rating != null) ...[
                             const SizedBox(height: 2),
                             _Stars(rating: date.rating!),
@@ -359,19 +416,37 @@ class _TimelineCard extends StatelessWidget {
                   ),
                   if (date.cost != null) ...[
                     const SizedBox(height: RachaTokens.space2),
-                    Text('\$${date.cost!.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            fontSize: RachaType.caption, fontWeight: FontWeight.w700)),
+                    Text(
+                      formatMoney(
+                        date.cost,
+                        date.currency,
+                        locale: Localizations.localeOf(context).toString(),
+                      ),
+                      style: const TextStyle(
+                        fontSize: RachaType.caption,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                   if (!date.countsForStreak) ...[
                     const SizedBox(height: RachaTokens.space2),
-                    Row(children: [
-                      Icon(Icons.link_off, size: 14, color: scheme.onSurfaceVariant),
-                      const SizedBox(width: 4),
-                      Text(l10n.timelineDoesntCount,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.link_off,
+                          size: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.timelineDoesntCount,
                           style: TextStyle(
-                              color: scheme.onSurfaceVariant, fontSize: RachaType.micro)),
-                    ]),
+                            color: scheme.onSurfaceVariant,
+                            fontSize: RachaType.micro,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ],
               ),

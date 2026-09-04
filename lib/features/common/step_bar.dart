@@ -5,7 +5,12 @@ import '../../theme/tokens.dart';
 /// The 1–2 step progress used by the modal add flows: a row of segments, the
 /// reached ones filled, with a caption under it. Sits in an [AppBar.bottom].
 class StepBar extends StatelessWidget implements PreferredSizeWidget {
-  const StepBar({super.key, required this.step, required this.total, required this.label});
+  const StepBar({
+    super.key,
+    required this.step,
+    required this.total,
+    required this.label,
+  });
 
   final int step;
   final int total;
@@ -19,7 +24,11 @@ class StepBar extends StatelessWidget implements PreferredSizeWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          RachaTokens.space4, 0, RachaTokens.space4, RachaTokens.space3),
+        RachaTokens.space4,
+        0,
+        RachaTokens.space4,
+        RachaTokens.space3,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,8 +41,12 @@ class StepBar extends StatelessWidget implements PreferredSizeWidget {
                   child: Container(
                     height: 4,
                     decoration: BoxDecoration(
-                      color: i <= step ? scheme.primary : scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(RachaTokens.radiusFull),
+                      color: i <= step
+                          ? scheme.primary
+                          : scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(
+                        RachaTokens.radiusFull,
+                      ),
                     ),
                   ),
                 ),

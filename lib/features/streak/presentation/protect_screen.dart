@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../../dates/data/dates_repository.dart';
-import '../data/protect_repository.dart';
+import '../../common/error_retry.dart';
+import '../../common/skeleton.dart';
+import '../../dates/application/dates.dart';
+import '../application/protect.dart';
 
 /// /streak/protect — the hub: season progress, the free monthly pause, any
 /// active freeze, and repairs that need an answer.
@@ -28,11 +30,18 @@ class ProtectScreen extends ConsumerWidget {
           await ref.read(protectHubProvider.future);
         },
         child: hub.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => ListView(children: [
-            const SizedBox(height: 120),
-            Center(child: Text(l10n.commonSomethingWentWrong)),
-          ]),
+          loading: () => const SkeletonList(rows: 4, rowHeight: 96),
+          error: (_, __) => ListView(
+            children: [
+              const SizedBox(height: 120),
+              ErrorRetry(
+                onRetry: () {
+                  ref.invalidate(protectHubProvider);
+                  ref.invalidate(streakProvider);
+                },
+              ),
+            ],
+          ),
           data: (h) => ListView(
             padding: const EdgeInsets.all(RachaTokens.space5),
             children: [
@@ -40,9 +49,10 @@ class ProtectScreen extends ConsumerWidget {
               const SizedBox(height: RachaTokens.space5),
               if (streak != null) ...[
                 _SeasonCard(
-                    record: streak.recordStreak,
-                    best: streak.season.best,
-                    length: streak.season.length),
+                  record: streak.recordStreak,
+                  best: streak.season.best,
+                  length: streak.season.length,
+                ),
                 const SizedBox(height: RachaTokens.space4),
               ],
               _FreezeSection(hub: h),
@@ -105,7 +115,10 @@ class _OptionRow extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: RachaTokens.brM,
-          side: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          side: BorderSide(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
         child: InkWell(
           onTap: enabled ? onTap : null,
@@ -119,11 +132,18 @@ class _OptionRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(height: 2),
-                      Text(subtitle,
-                          style: TextStyle(
-                              color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: RachaType.caption,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -138,7 +158,11 @@ class _OptionRow extends StatelessWidget {
 }
 
 class _SeasonCard extends StatelessWidget {
-  const _SeasonCard({required this.record, required this.best, required this.length});
+  const _SeasonCard({
+    required this.record,
+    required this.best,
+    required this.length,
+  });
   final int record;
   final int best;
   final String length;
@@ -157,12 +181,21 @@ class _SeasonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: RachaTokens.brM,
-        border: Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+        border: Border.all(
+          color: scheme.outlineVariant,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+          Text(
+            label,
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              fontSize: RachaType.caption,
+            ),
+          ),
           const SizedBox(height: RachaTokens.space2),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -187,9 +220,21 @@ class _Stat extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Column(
       children: [
-        Text('$value',
-            style: TextStyle(fontSize: RachaType.title, fontWeight: FontWeight.w800, color: scheme.primary)),
-        Text(label, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+        Text(
+          '$value',
+          style: TextStyle(
+            fontSize: RachaType.title,
+            fontWeight: FontWeight.w800,
+            color: scheme.primary,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: scheme.onSurfaceVariant,
+            fontSize: RachaType.caption,
+          ),
+        ),
       ],
     );
   }
@@ -214,22 +259,29 @@ class _FreezeSection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.protectActiveFreezeFrom(f.startsWeekKey, f.endsWeekKey),
-                style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              l10n.protectActiveFreezeFrom(f.startsWeekKey, f.endsWeekKey),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: RachaTokens.space2),
             TextButton(
               onPressed: () async {
                 try {
-                  await ref.read(protectRepositoryProvider).cancelFreeze(f.id);
+                  await ref
+                      .read(protectControllerProvider.notifier)
+                      .cancelFreeze(f.id);
                   ref.invalidate(protectHubProvider);
                   ref.invalidate(streakProvider);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text(l10n.freezeCancelled)));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.freezeCancelled)),
+                    );
                   }
                 } on ApiException catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.localizedMessage(context))),
+                    );
                   }
                 }
               },
@@ -272,17 +324,23 @@ class _RepairSection extends ConsumerWidget {
           Card(
             margin: const EdgeInsets.only(bottom: RachaTokens.space2),
             child: ListTile(
-              leading: Icon(r.isMine ? Icons.hourglass_empty : Icons.how_to_reg_outlined,
-                  color: scheme.primary),
-              title: Text(r.isMine
-                  ? l10n.protectPendingMine(r.targetWeekKey)
-                  : l10n.protectPendingYours(r.targetWeekKey)),
+              leading: Icon(
+                r.isMine ? Icons.hourglass_empty : Icons.how_to_reg_outlined,
+                color: scheme.primary,
+              ),
+              title: Text(
+                r.isMine
+                    ? l10n.protectPendingMine(r.targetWeekKey)
+                    : l10n.protectPendingYours(r.targetWeekKey),
+              ),
               trailing: r.isMine ? null : const Icon(Icons.chevron_right),
-              onTap: r.isMine ? null : () async {
-                await context.push('/streak/repair/${r.id}');
-                ref.invalidate(protectHubProvider);
-                ref.invalidate(streakProvider);
-              },
+              onTap: r.isMine
+                  ? null
+                  : () async {
+                      await context.push('/streak/repair/${r.id}');
+                      ref.invalidate(protectHubProvider);
+                      ref.invalidate(streakProvider);
+                    },
             ),
           ),
         if (hub.repairAvailable)
@@ -296,11 +354,16 @@ class _RepairSection extends ConsumerWidget {
               ref.invalidate(streakProvider);
             },
           ),
-        if (!hub.repairAvailable && hub.pendingRepairs.isEmpty && hub.activeFreeze == null)
+        if (!hub.repairAvailable &&
+            hub.pendingRepairs.isEmpty &&
+            hub.activeFreeze == null)
           Padding(
             padding: const EdgeInsets.only(top: RachaTokens.space3),
-            child: Text(l10n.protectNothing,
-                style: TextStyle(color: scheme.onSurfaceVariant), textAlign: TextAlign.center),
+            child: Text(
+              l10n.protectNothing,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
           ),
       ],
     );

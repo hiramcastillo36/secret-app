@@ -8,7 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_banner.dart';
 import '../../common/field_tile.dart';
-import '../data/dates_repository.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 
 /// Edit the mutable fields of an existing date. Place changes are out of scope
@@ -55,9 +55,18 @@ class _DateEditScreenState extends ConsumerState<DateEditScreen> {
       lastDate: now,
     );
     if (date == null || !mounted) return;
-    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_when));
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_when),
+    );
     if (!mounted) return;
-    var picked = DateTime(date.year, date.month, date.day, time?.hour ?? 0, time?.minute ?? 0);
+    var picked = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time?.hour ?? 0,
+      time?.minute ?? 0,
+    );
     if (picked.isAfter(now)) picked = now;
     setState(() => _when = picked);
   }
@@ -69,7 +78,9 @@ class _DateEditScreenState extends ConsumerState<DateEditScreen> {
       _error = null;
     });
     try {
-      await ref.read(datesRepositoryProvider).update(
+      await ref
+          .read(datesControllerProvider.notifier)
+          .update(
             widget.date.id,
             title: _title.text.trim(),
             happenedAt: _when,
@@ -83,7 +94,9 @@ class _DateEditScreenState extends ConsumerState<DateEditScreen> {
       setState(() {
         _error = e.code == 'FUTURE_DATE'
             ? AppLocalizations.of(context).dateErrorFuture
-            : (e.isNetwork ? AppLocalizations.of(context).commonNoConnection : e.message);
+            : (e.isNetwork
+                  ? AppLocalizations.of(context).commonNoConnection
+                  : e.localizedMessage(context));
         _saving = false;
       });
     }
@@ -110,9 +123,12 @@ class _DateEditScreenState extends ConsumerState<DateEditScreen> {
                     children: [
                       TextFormField(
                         controller: _title,
-                        decoration: InputDecoration(labelText: l10n.dateFieldTitle),
-                        validator: (v) =>
-                            (v ?? '').trim().isEmpty ? l10n.validationNameRequired : null,
+                        decoration: InputDecoration(
+                          labelText: l10n.dateFieldTitle,
+                        ),
+                        validator: (v) => (v ?? '').trim().isEmpty
+                            ? l10n.validationNameRequired
+                            : null,
                       ),
                       const SizedBox(height: RachaTokens.space4),
                       FieldTile(
@@ -122,27 +138,40 @@ class _DateEditScreenState extends ConsumerState<DateEditScreen> {
                         onTap: _pickWhen,
                       ),
                       const SizedBox(height: RachaTokens.space4),
-                      Text(l10n.dateFieldRating,
-                          style: const TextStyle(
-                              fontSize: RachaType.callout, fontWeight: FontWeight.w600)),
-                      Row(children: [
-                        for (var i = 1; i <= 5; i++)
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            iconSize: 32,
-                            onPressed: () => setState(() => _rating = _rating == i ? 0 : i),
-                            icon: Icon(
-                              i <= _rating ? Icons.star : Icons.star_border,
-                              color: i <= _rating ? scheme.primary : scheme.onSurfaceVariant,
+                      Text(
+                        l10n.dateFieldRating,
+                        style: const TextStyle(
+                          fontSize: RachaType.callout,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          for (var i = 1; i <= 5; i++)
+                            IconButton(
+                              tooltip: l10n.a11yRatingStars(i),
+                              visualDensity: VisualDensity.compact,
+                              iconSize: 32,
+                              onPressed: () => setState(
+                                () => _rating = _rating == i ? 0 : i,
+                              ),
+                              icon: Icon(
+                                i <= _rating ? Icons.star : Icons.star_border,
+                                color: i <= _rating
+                                    ? scheme.primary
+                                    : scheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                      ]),
+                        ],
+                      ),
                       const SizedBox(height: RachaTokens.space2),
                       TextFormField(
                         controller: _notes,
                         minLines: 2,
                         maxLines: 4,
-                        decoration: InputDecoration(labelText: l10n.dateFieldNotes),
+                        decoration: InputDecoration(
+                          labelText: l10n.dateFieldNotes,
+                        ),
                       ),
                       if (_error != null) ...[
                         const SizedBox(height: RachaTokens.space3),
@@ -158,14 +187,19 @@ class _DateEditScreenState extends ConsumerState<DateEditScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                      color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                    color: scheme.outlineVariant,
+                    width: RachaTokens.borderHairline,
+                  ),
                 ),
               ),
               child: FilledButton(
                 onPressed: _saving ? null : _save,
                 child: _saving
                     ? const SizedBox(
-                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(l10n.dateEditSave),
               ),
             ),

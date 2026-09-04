@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
+import '../../common/error_retry.dart';
 import '../../common/section_label.dart';
-import '../data/plans_repository.dart';
+import '../../common/skeleton.dart';
+import '../application/plans.dart';
 import '../domain/models.dart';
 
 /// /calendar — a month of dates (plum dots, already happened) and plans (amber
@@ -45,10 +47,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.calendarTitle),
-          bottom: TabBar(tabs: [
-            Tab(text: l10n.calendarTabMonth),
-            Tab(text: l10n.calendarTabIdeas),
-          ]),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: l10n.calendarTabMonth),
+              Tab(text: l10n.calendarTabIdeas),
+            ],
+          ),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => context.push('/plans/new'),
@@ -85,7 +89,6 @@ class _MonthTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final async = ref.watch(calendarProvider(month));
 
     return Column(
@@ -93,8 +96,10 @@ class _MonthTab extends ConsumerWidget {
         _MonthHeader(month: month, onShift: onShiftMonth),
         Expanded(
           child: async.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+            loading: () => const SkeletonList(rows: 4, rowHeight: 72),
+            error: (_, __) => ErrorRetry(
+              onRetry: () => ref.invalidate(calendarProvider(month)),
+            ),
             data: (cal) => ListView(
               children: [
                 _MonthGrid(
@@ -122,18 +127,36 @@ class _MonthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final label = toBeginningOfSentenceCase(DateFormat.yMMMM(locale).format(month));
+    final label = toBeginningOfSentenceCase(
+      DateFormat.yMMMM(locale).format(month),
+    );
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space3, vertical: RachaTokens.space2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: RachaTokens.space3,
+        vertical: RachaTokens.space2,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton.filledTonal(
-              onPressed: () => onShift(-1), icon: const Icon(Icons.chevron_left)),
-          Text(label, style: const TextStyle(fontSize: RachaType.headline, fontWeight: FontWeight.w700)),
+            tooltip: l10n.a11yPreviousMonth,
+            onPressed: () => onShift(-1),
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: RachaType.headline,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           IconButton.filledTonal(
-              onPressed: () => onShift(1), icon: const Icon(Icons.chevron_right)),
+            tooltip: l10n.a11yNextMonth,
+            onPressed: () => onShift(1),
+            icon: const Icon(Icons.chevron_right),
+          ),
         ],
       ),
     );
@@ -149,22 +172,33 @@ class _Legend extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     Widget item(Widget mark, String label) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            mark,
-            const SizedBox(width: RachaTokens.space1),
-            Text(label,
-                style: TextStyle(
-                    color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
-          ],
-        );
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        mark,
+        const SizedBox(width: RachaTokens.space1),
+        Text(
+          label,
+          style: TextStyle(
+            color: scheme.onSurfaceVariant,
+            fontSize: RachaType.caption,
+          ),
+        ),
+      ],
+    );
 
-    Widget dot(Color c) =>
-        Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: c));
+    Widget dot(Color c) => Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: c),
+    );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(RachaTokens.space4, RachaTokens.space2,
-          RachaTokens.space4, RachaTokens.space2),
+      padding: const EdgeInsets.fromLTRB(
+        RachaTokens.space4,
+        RachaTokens.space2,
+        RachaTokens.space4,
+        RachaTokens.space2,
+      ),
       child: Wrap(
         spacing: RachaTokens.space4,
         runSpacing: RachaTokens.space2,
@@ -208,11 +242,17 @@ class _MonthGrid extends StatelessWidget {
 
     // Grid starts on the Monday of the week containing the 1st.
     final first = DateTime(month.year, month.month, 1);
-    final start = first.subtract(Duration(days: (first.weekday - DateTime.monday) % 7));
+    final start = first.subtract(
+      Duration(days: (first.weekday - DateTime.monday) % 7),
+    );
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final (weekStart, weekEnd) = _isoWeekBounds(today);
-    final currentWeekCovered = _weekHasCoveredDate(calendar, weekStart, weekEnd);
+    final currentWeekCovered = _weekHasCoveredDate(
+      calendar,
+      weekStart,
+      weekEnd,
+    );
     final currentWeekPlanned = _weekHasPlan(calendar, weekStart, weekEnd);
 
     final weekdayLabels = _weekdayInitials(locale);
@@ -226,11 +266,14 @@ class _MonthGrid extends StatelessWidget {
               for (final w in weekdayLabels)
                 Expanded(
                   child: Center(
-                    child: Text(w,
-                        style: TextStyle(
-                            fontSize: RachaType.micro,
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600)),
+                    child: Text(
+                      w,
+                      style: TextStyle(
+                        fontSize: RachaType.micro,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -238,13 +281,17 @@ class _MonthGrid extends StatelessWidget {
           const SizedBox(height: RachaTokens.space1),
           for (var row = 0; row < 6; row++)
             _WeekRow(
-              days: [for (var col = 0; col < 7; col++) start.add(Duration(days: row * 7 + col))],
+              days: [
+                for (var col = 0; col < 7; col++)
+                  start.add(Duration(days: row * 7 + col)),
+              ],
               month: month,
               selected: selected,
               today: today,
               calendar: calendar,
               onSelect: onSelect,
-              isCurrentWeek: (d) => !d.isBefore(weekStart) && !d.isAfter(weekEnd),
+              isCurrentWeek: (d) =>
+                  !d.isBefore(weekStart) && !d.isAfter(weekEnd),
               currentWeekCovered: currentWeekCovered,
               currentWeekPlanned: currentWeekPlanned,
             ),
@@ -287,8 +334,8 @@ class _WeekRow extends StatelessWidget {
       rowBg = currentWeekCovered
           ? scheme.primaryContainer.withValues(alpha: 0.5)
           : currentWeekPlanned
-              ? RachaTokens.atRiskDark.withValues(alpha: 0.18)
-              : scheme.surfaceContainerHighest;
+          ? RachaTokens.atRiskDark.withValues(alpha: 0.18)
+          : scheme.surfaceContainerHighest;
     }
 
     return Container(
@@ -335,57 +382,73 @@ class _DayCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final marks = <String>[
+      if (hasDate) l10n.calendarLegendDate,
+      if (hasPlan) l10n.calendarLegendPlan,
+    ];
     final Color dayColor = isSelected
         ? scheme.onPrimary
         : !inMonth
-            ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
-            : isToday
-                ? scheme.primary
-                : scheme.onSurface;
+        ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+        : isToday
+        ? scheme.primary
+        : scheme.onSurface;
     final dotColor = isSelected ? scheme.onPrimary : null;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: RachaTokens.brS,
-      child: Container(
-        height: 44,
-        margin: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          borderRadius: RachaTokens.brS,
-          color: isSelected
-              ? scheme.primary
-              : isToday
-                  ? scheme.primary.withValues(alpha: 0.12)
-                  : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${day.day}',
-              style: TextStyle(
-                fontSize: RachaType.caption,
-                fontWeight: (isToday || isSelected) ? FontWeight.w800 : FontWeight.w500,
-                color: dayColor,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: marks.isEmpty ? '${day.day}' : '${day.day}, ${marks.join(', ')}',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: RachaTokens.brS,
+        child: Container(
+          height: 44,
+          margin: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            borderRadius: RachaTokens.brS,
+            color: isSelected
+                ? scheme.primary
+                : isToday
+                ? scheme.primary.withValues(alpha: 0.12)
+                : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${day.day}',
+                style: TextStyle(
+                  fontSize: RachaType.caption,
+                  fontWeight: (isToday || isSelected)
+                      ? FontWeight.w800
+                      : FontWeight.w500,
+                  color: dayColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 3),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (hasDate) _dot(dotColor ?? scheme.primary),
-                if (hasDate && hasPlan) const SizedBox(width: 3),
-                if (hasPlan) _dot(dotColor ?? RachaTokens.atRiskLight),
-              ],
-            ),
-          ],
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (hasDate) _dot(dotColor ?? scheme.primary),
+                  if (hasDate && hasPlan) const SizedBox(width: 3),
+                  if (hasPlan) _dot(dotColor ?? RachaTokens.atRiskLight),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _dot(Color c) =>
-      Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: c));
+  Widget _dot(Color c) => Container(
+    width: 6,
+    height: 6,
+    decoration: BoxDecoration(shape: BoxShape.circle, color: c),
+  );
 }
 
 class _DayDetail extends StatelessWidget {
@@ -398,7 +461,9 @@ class _DayDetail extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final heading = toBeginningOfSentenceCase(DateFormat.MMMMEEEEd(locale).format(day));
+    final heading = toBeginningOfSentenceCase(
+      DateFormat.MMMMEEEEd(locale).format(day),
+    );
 
     return Padding(
       padding: const EdgeInsets.all(RachaTokens.space4),
@@ -408,7 +473,10 @@ class _DayDetail extends StatelessWidget {
           Text(heading, style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: RachaTokens.space2),
           if (items.isEmpty) ...[
-            Text(l10n.calendarDayEmpty, style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              l10n.calendarDayEmpty,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
             const SizedBox(height: RachaTokens.space2),
             Align(
               alignment: Alignment.centerLeft,
@@ -443,43 +511,62 @@ class _ItemTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: RachaTokens.brM,
-          side: BorderSide(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          side: BorderSide(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
         child: InkWell(
-          onTap: () => context.push(isPlan ? '/plans/${item.id}' : '/dates/${item.id}'),
+          onTap: () =>
+              context.push(isPlan ? '/plans/${item.id}' : '/dates/${item.id}'),
           child: IntrinsicHeight(
             child: Row(
               children: [
                 Container(width: 4, color: accent),
                 const SizedBox(width: RachaTokens.space3),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
-                  child: Icon(isPlan ? Icons.event_outlined : Icons.favorite,
-                      size: 18, color: accent),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: RachaTokens.space3,
+                  ),
+                  child: Icon(
+                    isPlan ? Icons.event_outlined : Icons.favorite,
+                    size: 18,
+                    color: accent,
+                  ),
                 ),
                 const SizedBox(width: RachaTokens.space3),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: RachaTokens.space3),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: RachaTokens.space3,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(item.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w700)),
-                        Text(TimeOfDay.fromDateTime(item.at).format(context),
-                            style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                fontSize: RachaType.caption)),
+                        Text(
+                          item.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          TimeOfDay.fromDateTime(item.at).format(context),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: RachaType.caption,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(right: RachaTokens.space2),
-                  child: Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+                  child: Icon(
+                    Icons.chevron_right,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -499,8 +586,9 @@ class _IdeasTab extends ConsumerWidget {
     final async = ref.watch(plansListProvider);
 
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => Center(child: Text(l10n.commonSomethingWentWrong)),
+      loading: () => const SkeletonList(rows: 5, rowHeight: 72),
+      error: (_, __) =>
+          ErrorRetry(onRetry: () => ref.invalidate(plansListProvider)),
       data: (list) {
         final ideas = list.ideas;
         return ListView(
@@ -517,8 +605,15 @@ class _IdeasTab extends ConsumerWidget {
             const SizedBox(height: RachaTokens.space2),
             if (ideas.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: RachaTokens.space7),
-                child: Center(child: Text(l10n.calendarNoIdeas, textAlign: TextAlign.center)),
+                padding: const EdgeInsets.symmetric(
+                  vertical: RachaTokens.space7,
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.calendarNoIdeas,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               )
             else
               for (final idea in ideas)
@@ -530,8 +625,9 @@ class _IdeasTab extends ConsumerWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: RachaTokens.brM,
                       side: BorderSide(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                          width: RachaTokens.borderHairline),
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        width: RachaTokens.borderHairline,
+                      ),
                     ),
                     child: InkWell(
                       onTap: () => context.push('/plans/${idea.id}'),
@@ -539,16 +635,25 @@ class _IdeasTab extends ConsumerWidget {
                         padding: const EdgeInsets.all(RachaTokens.space3),
                         child: Row(
                           children: [
-                            Icon(Icons.lightbulb_outline,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            Icon(
+                              Icons.lightbulb_outline,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                             const SizedBox(width: RachaTokens.space3),
                             Expanded(
-                              child: Text(idea.title,
-                                  style: const TextStyle(fontWeight: FontWeight.w600)),
+                              child: Text(
+                                idea.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                             const SizedBox(width: RachaTokens.space2),
                             FilledButton.tonal(
-                              onPressed: () => context.push('/plans/${idea.id}'),
+                              onPressed: () =>
+                                  context.push('/plans/${idea.id}'),
                               child: Text(l10n.calendarPlanIt),
                             ),
                           ],
@@ -577,7 +682,9 @@ bool _sameDay(DateTime a, DateTime b) =>
 
 bool _weekHasCoveredDate(Calendar cal, DateTime start, DateTime end) {
   for (var d = start; !d.isAfter(end); d = d.add(const Duration(days: 1))) {
-    if (cal.forDay(d).any((i) => i.kind == 'date' && (i.countsForStreak ?? false))) {
+    if (cal
+        .forDay(d)
+        .any((i) => i.kind == 'date' && (i.countsForStreak ?? false))) {
       return true;
     }
   }
@@ -595,6 +702,8 @@ List<String> _weekdayInitials(String locale) {
   final base = DateTime(2024, 1, 1); // a Monday
   return [
     for (var i = 0; i < 7; i++)
-      DateFormat.E(locale).format(base.add(Duration(days: i))).characters.first.toUpperCase(),
+      DateFormat.E(
+        locale,
+      ).format(base.add(Duration(days: i))).characters.first.toUpperCase(),
   ];
 }

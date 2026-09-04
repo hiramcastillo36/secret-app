@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/env/env.dart';
 import 'core/i18n/locale_controller.dart';
 import 'l10n/app_localizations.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
 void main() {
+  Env.assertReleaseConfig();
   runApp(const ProviderScope(child: RachaApp()));
 }
 

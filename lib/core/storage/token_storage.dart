@@ -18,7 +18,8 @@ class TokenStorage {
     await _store.write(key: _kRefresh, value: refresh);
   }
 
-  Future<void> saveAccess(String access) => _store.write(key: _kAccess, value: access);
+  Future<void> saveAccess(String access) =>
+      _store.write(key: _kAccess, value: access);
 
   Future<void> clear() async {
     await _store.delete(key: _kAccess);
@@ -27,7 +28,9 @@ class TokenStorage {
 }
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) {
-  return TokenStorage(const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  ));
+  return TokenStorage(
+    const FlutterSecureStorage(
+      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    ),
+  );
 });

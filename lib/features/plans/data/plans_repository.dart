@@ -39,14 +39,18 @@ class PlansRepository {
     String? wishlistItemId,
   }) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/plans', data: {
-        if (title.isNotEmpty) 'title': title,
-        if (placeId != null) 'place_id': placeId,
-        if (scheduledAt != null) 'scheduled_at': scheduledAt.toUtc().toIso8601String(),
-        if (scheduledAt != null) 'has_time': hasTime,
-        if (notes != null && notes.isNotEmpty) 'notes': notes,
-        if (wishlistItemId != null) 'wishlist_item_id': wishlistItemId,
-      });
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/plans',
+        data: {
+          if (title.isNotEmpty) 'title': title,
+          if (placeId != null) 'place_id': placeId,
+          if (scheduledAt != null)
+            'scheduled_at': scheduledAt.toUtc().toIso8601String(),
+          if (scheduledAt != null) 'has_time': hasTime,
+          if (notes != null && notes.isNotEmpty) 'notes': notes,
+          if (wishlistItemId != null) 'wishlist_item_id': wishlistItemId,
+        },
+      );
       return Plan.fromJson((res.data!['plan'] as Map).cast<String, dynamic>());
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -62,13 +66,17 @@ class PlansRepository {
     String? notes,
   }) async {
     try {
-      final res = await _dio.patch<Map<String, dynamic>>('/plans/$id', data: {
-        if (title != null) 'title': title,
-        if (placeId != null) 'place_id': placeId,
-        if (scheduledAt != null) 'scheduled_at': scheduledAt.toUtc().toIso8601String(),
-        if (hasTime != null) 'has_time': hasTime,
-        if (notes != null) 'notes': notes,
-      });
+      final res = await _dio.patch<Map<String, dynamic>>(
+        '/plans/$id',
+        data: {
+          if (title != null) 'title': title,
+          if (placeId != null) 'place_id': placeId,
+          if (scheduledAt != null)
+            'scheduled_at': scheduledAt.toUtc().toIso8601String(),
+          if (hasTime != null) 'has_time': hasTime,
+          if (notes != null) 'notes': notes,
+        },
+      );
       return Plan.fromJson((res.data!['plan'] as Map).cast<String, dynamic>());
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -78,10 +86,13 @@ class PlansRepository {
   /// decision: "confirm" | "decline".
   Future<Plan> respond(String id, String decision, {String? note}) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/plans/$id/respond', data: {
-        'decision': decision,
-        if (note != null && note.isNotEmpty) 'note': note,
-      });
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/plans/$id/respond',
+        data: {
+          'decision': decision,
+          if (note != null && note.isNotEmpty) 'note': note,
+        },
+      );
       return Plan.fromJson((res.data!['plan'] as Map).cast<String, dynamic>());
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -109,26 +120,35 @@ class PlansRepository {
     String? notes,
   }) async {
     try {
-      final res = await _dio.post<Map<String, dynamic>>('/plans/$id/complete', data: {
-        'happened_at': happenedAt.toUtc().toIso8601String(),
-        if (title != null) 'title': title,
-        if (placeId != null) 'place_id': placeId,
-        if (rating != null) 'rating': rating,
-        if (cost != null) 'cost': cost,
-        if (notes != null && notes.isNotEmpty) 'notes': notes,
-      });
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/plans/$id/complete',
+        data: {
+          'happened_at': happenedAt.toUtc().toIso8601String(),
+          if (title != null) 'title': title,
+          if (placeId != null) 'place_id': placeId,
+          if (rating != null) 'rating': rating,
+          if (cost != null) 'cost': cost,
+          if (notes != null && notes.isNotEmpty) 'notes': notes,
+        },
+      );
       return ((res.data!['date'] as Map)['id']) as String;
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
   }
 
-  Future<Calendar> calendar({required DateTime from, required DateTime to}) async {
+  Future<Calendar> calendar({
+    required DateTime from,
+    required DateTime to,
+  }) async {
     try {
-      final res = await _dio.get<Map<String, dynamic>>('/calendar', queryParameters: {
-        'from': from.toUtc().toIso8601String(),
-        'to': to.toUtc().toIso8601String(),
-      });
+      final res = await _dio.get<Map<String, dynamic>>(
+        '/calendar',
+        queryParameters: {
+          'from': from.toUtc().toIso8601String(),
+          'to': to.toUtc().toIso8601String(),
+        },
+      );
       return Calendar.fromJson(res.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -145,16 +165,25 @@ final plansListProvider = FutureProvider.autoDispose<PlanList>((ref) {
   return ref.watch(plansRepositoryProvider).list();
 });
 
-final planProvider =
-    FutureProvider.autoDispose.family<Plan, String>((ref, id) {
+final planProvider = FutureProvider.autoDispose.family<Plan, String>((ref, id) {
   return ref.watch(plansRepositoryProvider).get(id);
 });
 
 /// The calendar for the month containing [month] (day is ignored). Fetches a
 /// window padded by a week on each side so edge days render.
-final calendarProvider =
-    FutureProvider.autoDispose.family<Calendar, DateTime>((ref, month) {
-  final first = DateTime(month.year, month.month, 1).subtract(const Duration(days: 7));
-  final last = DateTime(month.year, month.month + 1, 1).add(const Duration(days: 7));
+final calendarProvider = FutureProvider.autoDispose.family<Calendar, DateTime>((
+  ref,
+  month,
+) {
+  final first = DateTime(
+    month.year,
+    month.month,
+    1,
+  ).subtract(const Duration(days: 7));
+  final last = DateTime(
+    month.year,
+    month.month + 1,
+    1,
+  ).add(const Duration(days: 7));
   return ref.watch(plansRepositoryProvider).calendar(from: first, to: last);
 });

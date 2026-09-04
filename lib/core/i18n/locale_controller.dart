@@ -7,8 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// A `null` state means "Automatic": follow the device language, falling back to
 /// Spanish. An explicit [Locale] pins the app to that language regardless of the
-/// device, and is remembered across launches in [SharedPreferences] — it never
-/// leaves the phone.
+/// device, and is remembered across launches in [SharedPreferences].
+///
+/// This controller itself only ever touches local storage; every request
+/// already carries the resolved tag as `Accept-Language` via the dio
+/// interceptor. The language screen additionally pushes the resolved tag to
+/// PATCH /me/locale (best effort) so it reaches messages sent outside a
+/// request too — see `AuthActionsController.syncLocale`.
 class LocaleController extends StateNotifier<Locale?> {
   LocaleController() : super(null) {
     _load();
@@ -41,7 +46,9 @@ class LocaleController extends StateNotifier<Locale?> {
 }
 
 final localeControllerProvider =
-    StateNotifierProvider<LocaleController, Locale?>((ref) => LocaleController());
+    StateNotifierProvider<LocaleController, Locale?>(
+      (ref) => LocaleController(),
+    );
 
 /// The concrete BCP-47 tag to send as `Accept-Language` and to format dates and
 /// numbers with: the explicit choice if there is one, otherwise the device

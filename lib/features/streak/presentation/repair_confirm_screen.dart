@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../../dates/data/dates_repository.dart';
-import '../data/protect_repository.dart';
+import '../../dates/application/dates.dart';
+import '../application/protect.dart';
 
 /// /streak/repair/:id — the partner confirms or rejects a pending repair.
 class RepairConfirmScreen extends ConsumerStatefulWidget {
@@ -14,7 +14,8 @@ class RepairConfirmScreen extends ConsumerStatefulWidget {
   final String repairId;
 
   @override
-  ConsumerState<RepairConfirmScreen> createState() => _RepairConfirmScreenState();
+  ConsumerState<RepairConfirmScreen> createState() =>
+      _RepairConfirmScreenState();
 }
 
 class _RepairConfirmScreenState extends ConsumerState<RepairConfirmScreen> {
@@ -24,18 +25,30 @@ class _RepairConfirmScreenState extends ConsumerState<RepairConfirmScreen> {
     final l10n = AppLocalizations.of(context);
     setState(() => _busy = true);
     try {
-      await ref.read(protectRepositoryProvider).respondRepair(widget.repairId, decision);
+      await ref
+          .read(protectControllerProvider.notifier)
+          .respondRepair(widget.repairId, decision);
       if (!mounted) return;
       ref.invalidate(protectHubProvider);
       ref.invalidate(streakProvider);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(decision == 'confirm' ? l10n.repairConfirmedToast : l10n.repairRejectedToast),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            decision == 'confirm'
+                ? l10n.repairConfirmedToast
+                : l10n.repairRejectedToast,
+          ),
+        ),
+      );
       context.pop();
     } on ApiException catch (e) {
       if (mounted) {
-        final msg = e.code == 'cannot_confirm_own_repair' ? l10n.repairCannotConfirmOwn : e.message;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        final msg = e.code == 'cannot_confirm_own_repair'
+            ? l10n.repairCannotConfirmOwn
+            : e.localizedMessage(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
         setState(() => _busy = false);
       }
     }
@@ -65,16 +78,19 @@ class _RepairConfirmScreenState extends ConsumerState<RepairConfirmScreen> {
                 width: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: (Theme.of(context).brightness == Brightness.dark
-                          ? RachaTokens.atRiskDark
-                          : RachaTokens.atRiskLight)
-                      .withValues(alpha: 0.15),
+                  color:
+                      (Theme.of(context).brightness == Brightness.dark
+                              ? RachaTokens.atRiskDark
+                              : RachaTokens.atRiskLight)
+                          .withValues(alpha: 0.15),
                 ),
-                child: Icon(Icons.hourglass_bottom,
-                    size: 34,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? RachaTokens.atRiskDark
-                        : RachaTokens.atRiskLight),
+                child: Icon(
+                  Icons.hourglass_bottom,
+                  size: 34,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? RachaTokens.atRiskDark
+                      : RachaTokens.atRiskLight,
+                ),
               ),
             ),
             const SizedBox(height: RachaTokens.space5),
@@ -82,23 +98,33 @@ class _RepairConfirmScreenState extends ConsumerState<RepairConfirmScreen> {
               Text(
                 l10n.protectPendingYours(repair.targetWeekKey),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: RachaType.headline, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: RachaType.headline,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             const SizedBox(height: RachaTokens.space3),
-            Text(l10n.repairConfirmBody, style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              l10n.repairConfirmBody,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
             const Spacer(),
             if (_busy)
               const Center(child: CircularProgressIndicator())
             else ...[
               FilledButton(
                 onPressed: () => _respond('confirm'),
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                ),
                 child: Text(l10n.repairConfirm),
               ),
               const SizedBox(height: RachaTokens.space3),
               OutlinedButton(
                 onPressed: () => _respond('reject'),
-                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                ),
                 child: Text(l10n.repairReject),
               ),
             ],

@@ -6,13 +6,14 @@ import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/error_banner.dart';
 import '../../common/field_tile.dart';
-import '../data/auth_repository.dart';
+import '../application/auth.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -39,11 +40,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _error = null;
     });
     try {
-      await ref.read(authRepositoryProvider).forgotPassword(value);
+      await ref.read(authActionsProvider.notifier).forgotPassword(value);
       if (mounted) setState(() => _done = true);
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() => _error = e.isNetwork ? l10n.commonNoConnection : e.message);
+        setState(
+          () => _error = e.isNetwork
+              ? l10n.commonNoConnection
+              : e.localizedMessage(context),
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -69,31 +74,43 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       width: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: (Theme.of(context).brightness == Brightness.dark
-                                ? RachaTokens.okDark
-                                : RachaTokens.okLight)
-                            .withValues(alpha: 0.15),
+                        color:
+                            (Theme.of(context).brightness == Brightness.dark
+                                    ? RachaTokens.okDark
+                                    : RachaTokens.okLight)
+                                .withValues(alpha: 0.15),
                       ),
-                      child: Icon(Icons.mark_email_read_outlined,
-                          size: 36,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? RachaTokens.okDark
-                              : RachaTokens.okLight),
+                      child: Icon(
+                        Icons.mark_email_read_outlined,
+                        size: 36,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? RachaTokens.okDark
+                            : RachaTokens.okLight,
+                      ),
                     ),
                     const SizedBox(height: RachaTokens.space5),
-                    Text(l10n.forgotDoneTitle,
-                        style: const TextStyle(
-                            fontSize: RachaType.headline, fontWeight: FontWeight.w700)),
+                    Text(
+                      l10n.forgotDoneTitle,
+                      style: const TextStyle(
+                        fontSize: RachaType.headline,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: RachaTokens.space2),
-                    Text(l10n.forgotDone,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      l10n.forgotDone,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                   ],
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.forgotBody, style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      l10n.forgotBody,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                     const SizedBox(height: RachaTokens.space4),
                     TextField(
                       controller: _email,
@@ -108,10 +125,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     const SizedBox(height: RachaTokens.space5),
                     FilledButton(
                       onPressed: _sending ? null : _submit,
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
                       child: _sending
                           ? const SizedBox(
-                              height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : Text(l10n.forgotSubmit),
                     ),
                     const SizedBox(height: RachaTokens.space4),

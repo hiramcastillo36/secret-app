@@ -8,7 +8,7 @@ import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../common/field_tile.dart';
-import '../data/auth_repository.dart';
+import '../application/auth.dart';
 
 /// Opened from the email link (`/auth/verify-email?token=...`) — auto-verifies —
 /// or from an in-app banner, where the user can resend and paste the code.
@@ -32,7 +32,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   void initState() {
     super.initState();
     if (widget.token != null && widget.token!.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _verify(widget.token!));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _verify(widget.token!),
+      );
     }
   }
 
@@ -57,12 +59,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final l10n = AppLocalizations.of(context);
     setState(() => _busy = true);
     try {
-      final retryAfter = await ref.read(authRepositoryProvider).sendEmailVerification();
+      final retryAfter = await ref
+          .read(authActionsProvider.notifier)
+          .sendEmailVerification();
       if (!mounted) return;
       setState(() => _message = l10n.verifySent);
       _startCooldown(retryAfter);
     } on ApiException catch (e) {
-      if (mounted) setState(() => _message = e.message);
+      if (mounted) setState(() => _message = e.localizedMessage(context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -72,15 +76,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final l10n = AppLocalizations.of(context);
     setState(() => _busy = true);
     try {
-      await ref.read(authRepositoryProvider).verifyEmail(token.trim());
-      ref.invalidate(meProvider);
+      await ref.read(authActionsProvider.notifier).verifyEmail(token.trim());
       if (!mounted) return;
       setState(() {
         _done = true;
         _message = l10n.verifyDone;
       });
     } on ApiException catch (e) {
-      if (mounted) setState(() => _message = e.message);
+      if (mounted) setState(() => _message = e.localizedMessage(context));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -109,37 +112,59 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     shape: BoxShape.circle,
                     color: scheme.primaryContainer,
                   ),
-                  child: Icon(_done ? Icons.mark_email_read_outlined : Icons.mail_outline,
-                      size: 40, color: scheme.onPrimaryContainer),
+                  child: Icon(
+                    _done ? Icons.mark_email_read_outlined : Icons.mail_outline,
+                    size: 40,
+                    color: scheme.onPrimaryContainer,
+                  ),
                 ),
               ),
               const SizedBox(height: RachaTokens.space5),
-              Text(l10n.verifyTitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: RachaType.headline, fontWeight: FontWeight.w700)),
+              Text(
+                l10n.verifyTitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: RachaType.headline,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: RachaTokens.space2),
-              Text(l10n.verifyBody(email),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: scheme.onSurfaceVariant)),
+              Text(
+                l10n.verifyBody(email),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
               if (_message != null) ...[
                 const SizedBox(height: RachaTokens.space3),
-                Text(_message!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
+                Text(
+                  _message!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
               const SizedBox(height: RachaTokens.space5),
               if (_done)
                 FilledButton(
-                  onPressed: () => context.go('/home'),
-                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                  onPressed: () => context.go('/splash'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
                   child: Text(l10n.commonContinue),
                 )
               else ...[
                 OutlinedButton(
                   onPressed: (_busy || _cooldown > 0) ? null : _resend,
-                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                  child: Text(_cooldown > 0 ? l10n.verifyResendIn(_cooldown) : l10n.verifyResend),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  child: Text(
+                    _cooldown > 0
+                        ? l10n.verifyResendIn(_cooldown)
+                        : l10n.verifyResend,
+                  ),
                 ),
                 const SizedBox(height: RachaTokens.space4),
                 TextField(
@@ -149,12 +174,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 const SizedBox(height: RachaTokens.space3),
                 FilledButton(
                   onPressed: _busy ? null : () => _verify(_code.text),
-                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
                   child: Text(l10n.verifyConfirm),
                 ),
                 const SizedBox(height: RachaTokens.space2),
                 TextButton(
-                  onPressed: () => context.go('/couple/setup'),
+                  onPressed: () => context.go('/splash'),
                   child: Text(l10n.verifyAlreadyDone),
                 ),
                 const SizedBox(height: RachaTokens.space4),
@@ -162,9 +189,13 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.verifyBlockedTitle,
-                          style: TextStyle(
-                              color: scheme.onSurface, fontWeight: FontWeight.w700)),
+                      Text(
+                        l10n.verifyBlockedTitle,
+                        style: TextStyle(
+                          color: scheme.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       const SizedBox(height: RachaTokens.space2),
                       _Bullet(l10n.verifyBlocked1),
                       _Bullet(l10n.verifyBlocked2),
@@ -198,13 +229,20 @@ class _Bullet extends StatelessWidget {
             child: Container(
               width: 4,
               height: 4,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.primary),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: scheme.primary,
+              ),
             ),
           ),
           Expanded(
-            child: Text(text,
-                style: TextStyle(
-                    color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+            child: Text(
+              text,
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: RachaType.caption,
+              ),
+            ),
           ),
         ],
       ),

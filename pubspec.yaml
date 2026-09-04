@@ -26,22 +26,24 @@ dependencies:
 
   # Map (OpenStreetMap tiles, no Google Maps SDK)
   flutter_map: ^7.0.2
+  flutter_map_cache: ^2.1.0
+  dio_cache_interceptor: ^4.0.7
   latlong2: ^0.9.1
 
-  # Models
-  freezed_annotation: ^2.4.4
-  json_annotation: ^4.9.0
+  # Opening the OSM copyright page from the map attribution (ODbL requirement)
+  url_launcher: ^6.3.0
 
   # i18n formatting
-  intl: any
+  intl: ^0.20.2
+  flutter_timezone: ^5.1.0
+
+  # Picking date photos and an avatar from the gallery
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  build_runner: ^2.4.13
-  freezed: ^2.5.7
-  json_serializable: ^6.9.0
 
 flutter:
   uses-material-design: true

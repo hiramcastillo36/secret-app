@@ -16,7 +16,10 @@ class ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.errorContainer,
         borderRadius: RachaTokens.brS,
-        border: Border.all(color: scheme.error, width: RachaTokens.borderHairline),
+        border: Border.all(
+          color: scheme.error,
+          width: RachaTokens.borderHairline,
+        ),
       ),
       child: Text(text, style: TextStyle(color: scheme.onErrorContainer)),
     );

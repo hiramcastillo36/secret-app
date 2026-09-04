@@ -6,7 +6,12 @@ import '../../theme/tokens.dart';
 /// Used where a one-word state needs to read at a glance (a plan's status, a
 /// week's state).
 class StatusPill extends StatelessWidget {
-  const StatusPill({super.key, required this.label, required this.color, this.icon});
+  const StatusPill({
+    super.key,
+    required this.label,
+    required this.color,
+    this.icon,
+  });
 
   final String label;
   final Color color;
@@ -16,7 +21,9 @@ class StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: RachaTokens.space3, vertical: RachaTokens.space1),
+        horizontal: RachaTokens.space3,
+        vertical: RachaTokens.space1,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(RachaTokens.radiusFull),
@@ -31,7 +38,10 @@ class StatusPill extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-                color: color, fontSize: RachaType.caption, fontWeight: FontWeight.w700),
+              color: color,
+              fontSize: RachaType.caption,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

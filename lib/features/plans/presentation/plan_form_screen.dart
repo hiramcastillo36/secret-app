@@ -8,7 +8,7 @@ import '../../../theme/tokens.dart';
 import '../../common/field_tile.dart';
 import '../../dates/domain/models.dart';
 import '../../dates/presentation/place_picker_sheet.dart';
-import '../data/plans_repository.dart';
+import '../application/plans.dart';
 import '../domain/models.dart';
 
 /// /plans/new — title is the only required field. No date → saved as an idea;
@@ -103,7 +103,9 @@ class _PlanFormScreenState extends ConsumerState<PlanFormScreen> {
       _error = null;
     });
     try {
-      final plan = await ref.read(plansRepositoryProvider).create(
+      final plan = await ref
+          .read(plansControllerProvider.notifier)
+          .create(
             title: _title.text.trim(),
             placeId: _place?.id ?? _seedPlaceId,
             scheduledAt: _scheduledAt,
@@ -111,14 +113,21 @@ class _PlanFormScreenState extends ConsumerState<PlanFormScreen> {
             wishlistItemId: _wishlistItemId,
           );
       if (!mounted) return;
-      ref.invalidate(plansListProvider);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(plan.isIdea ? l10n.planSavedIdea : l10n.planSavedProposed),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            plan.isIdea ? l10n.planSavedIdea : l10n.planSavedProposed,
+          ),
+        ),
+      );
       context.pop();
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() => _error = e.code == 'PAST_DATE' ? l10n.planErrorPast : e.message);
+        setState(
+          () => _error = e.code == 'PAST_DATE'
+              ? l10n.planErrorPast
+              : e.localizedMessage(context),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -154,9 +163,13 @@ class _PlanFormScreenState extends ConsumerState<PlanFormScreen> {
                   ),
                   const SizedBox(height: RachaTokens.space5),
 
-                  Text(l10n.planFieldPlace,
-                      style: const TextStyle(
-                          fontSize: RachaType.callout, fontWeight: FontWeight.w600)),
+                  Text(
+                    l10n.planFieldPlace,
+                    style: const TextStyle(
+                      fontSize: RachaType.callout,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: RachaTokens.space2),
                   OutlinedButton.icon(
                     onPressed: _pickPlace,
@@ -179,12 +192,16 @@ class _PlanFormScreenState extends ConsumerState<PlanFormScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: RachaTokens.brM,
                       side: BorderSide(
-                          color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                        color: scheme.outlineVariant,
+                        width: RachaTokens.borderHairline,
+                      ),
                     ),
                     child: SwitchListTile.adaptive(
                       value: hasDate,
-                      title: Text(l10n.planHasDate,
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      title: Text(
+                        l10n.planHasDate,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       subtitle: Text(l10n.planHasDateSub),
                       onChanged: (on) => setState(() {
                         if (on) {
@@ -222,8 +239,12 @@ class _PlanFormScreenState extends ConsumerState<PlanFormScreen> {
                   ],
                   const SizedBox(height: RachaTokens.space3),
                   NoteBox(
-                    icon: hasDate ? Icons.mark_email_unread_outlined : Icons.lightbulb_outline,
-                    child: Text(hasDate ? l10n.planNoteProposed : l10n.planNoteIdea),
+                    icon: hasDate
+                        ? Icons.mark_email_unread_outlined
+                        : Icons.lightbulb_outline,
+                    child: Text(
+                      hasDate ? l10n.planNoteProposed : l10n.planNoteIdea,
+                    ),
                   ),
 
                   if (_error != null) ...[
@@ -238,14 +259,19 @@ class _PlanFormScreenState extends ConsumerState<PlanFormScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                      color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                    color: scheme.outlineVariant,
+                    width: RachaTokens.borderHairline,
+                  ),
                 ),
               ),
               child: FilledButton(
                 onPressed: _busy ? null : _save,
                 child: _busy
                     ? const SizedBox(
-                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(hasDate ? l10n.planPropose : l10n.planSaveIdea),
               ),
             ),

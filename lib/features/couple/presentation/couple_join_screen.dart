@@ -27,6 +27,16 @@ class _CoupleJoinScreenState extends ConsumerState<CoupleJoinScreen> {
   final _code = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Drop any error left over from the create screen — they share the
+    // controller (audit F-H11).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(coupleControllerProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
     _code.dispose();
     super.dispose();
@@ -36,12 +46,15 @@ class _CoupleJoinScreenState extends ConsumerState<CoupleJoinScreen> {
 
   Future<void> _submit() async {
     if (!_complete) return;
-    final result =
-        await ref.read(coupleControllerProvider.notifier).join(_code.text.trim());
+    final result = await ref
+        .read(coupleControllerProvider.notifier)
+        .join(_code.text.trim());
     if (!mounted || result == null) return;
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.coupleJoinWelcome(result.partner.displayName))),
+      SnackBar(
+        content: Text(l10n.coupleJoinWelcome(result.partner.displayName)),
+      ),
     );
     context.go('/home');
   }
@@ -74,21 +87,28 @@ class _CoupleJoinScreenState extends ConsumerState<CoupleJoinScreen> {
                           shape: BoxShape.circle,
                           color: scheme.primaryContainer,
                         ),
-                        child: Icon(Icons.vpn_key_outlined,
-                            size: 32, color: scheme.onPrimaryContainer),
+                        child: Icon(
+                          Icons.vpn_key_outlined,
+                          size: 32,
+                          color: scheme.onPrimaryContainer,
+                        ),
                       ),
                     ),
                     const SizedBox(height: RachaTokens.space4),
-                    Text(l10n.coupleJoinInstruction,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: scheme.onSurfaceVariant)),
+                    Text(
+                      l10n.coupleJoinInstruction,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
                     const SizedBox(height: RachaTokens.space5),
                     Container(
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHighest,
                         borderRadius: RachaTokens.brL,
                         border: Border.all(
-                          color: _complete ? scheme.primary : scheme.outlineVariant,
+                          color: _complete
+                              ? scheme.primary
+                              : scheme.outlineVariant,
                           width: _complete ? 1.5 : RachaTokens.borderHairline,
                         ),
                       ),
@@ -99,10 +119,11 @@ class _CoupleJoinScreenState extends ConsumerState<CoupleJoinScreen> {
                         textAlign: TextAlign.center,
                         maxLength: 6,
                         style: TextStyle(
-                            fontSize: RachaType.title,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 12,
-                            color: scheme.primary),
+                          fontSize: RachaType.title,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 12,
+                          color: scheme.primary,
+                        ),
                         inputFormatters: [
                           _UpperCaseFormatter(),
                           FilteringTextInputFormatter.allow(RegExp('[A-Z0-9]')),
@@ -114,17 +135,23 @@ class _CoupleJoinScreenState extends ConsumerState<CoupleJoinScreen> {
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                           filled: false,
-                          contentPadding: EdgeInsets.symmetric(vertical: RachaTokens.space5),
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: RachaTokens.space5,
+                          ),
                         ),
                         onChanged: (_) => setState(() {}),
                         onSubmitted: (_) => _submit(),
                       ),
                     ),
                     const SizedBox(height: RachaTokens.space2),
-                    Text(l10n.coupleJoinHelp,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                    Text(
+                      l10n.coupleJoinHelp,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: RachaType.caption,
+                      ),
+                    ),
                     if (state.hasError) ...[
                       const SizedBox(height: RachaTokens.space3),
                       ErrorBanner(text: coupleErrorText(l10n, state.error!)),
@@ -138,14 +165,19 @@ class _CoupleJoinScreenState extends ConsumerState<CoupleJoinScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
-                      color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+                    color: scheme.outlineVariant,
+                    width: RachaTokens.borderHairline,
+                  ),
                 ),
               ),
               child: FilledButton(
                 onPressed: (loading || !_complete) ? null : _submit,
                 child: loading
                     ? const SizedBox(
-                        height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : Text(l10n.coupleJoinSubmit),
               ),
             ),

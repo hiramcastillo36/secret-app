@@ -1,7 +1,8 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/auth/session_controller.dart';
 import '../features/account/presentation/account_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -9,14 +10,6 @@ import '../features/auth/presentation/onboarding_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/auth/presentation/reset_password_screen.dart';
 import '../features/auth/presentation/verify_email_screen.dart';
-import '../features/common/placeholder_screen.dart';
-import '../features/notifications/presentation/activity_screen.dart';
-import '../features/notifications/presentation/notifications_screen.dart';
-import '../features/plans/domain/models.dart';
-import '../features/plans/presentation/calendar_screen.dart';
-import '../features/plans/presentation/plan_detail_screen.dart';
-import '../features/plans/presentation/plan_form_screen.dart';
-import '../features/profile/presentation/language_screen.dart';
 import '../features/couple/presentation/couple_create_screen.dart';
 import '../features/couple/presentation/couple_join_screen.dart';
 import '../features/couple/presentation/couple_setup_screen.dart';
@@ -33,10 +26,16 @@ import '../features/dates/presentation/places_map_screen.dart';
 import '../features/dates/presentation/summary_screen.dart';
 import '../features/dates/presentation/timeline_screen.dart';
 import '../features/milestones/presentation/milestones_screen.dart';
+import '../features/notifications/presentation/activity_screen.dart';
+import '../features/notifications/presentation/notifications_screen.dart';
+import '../features/plans/domain/models.dart';
+import '../features/plans/presentation/calendar_screen.dart';
+import '../features/plans/presentation/plan_detail_screen.dart';
+import '../features/plans/presentation/plan_form_screen.dart';
 import '../features/privacy/presentation/privacy_screen.dart';
-import '../features/shell/scaffold_with_nav_bar.dart';
-import '../features/wrapped/presentation/wrapped_screen.dart';
+import '../features/profile/presentation/language_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/shell/scaffold_with_nav_bar.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/streak/presentation/freeze_form_screen.dart';
 import '../features/streak/presentation/protect_screen.dart';
@@ -46,49 +45,141 @@ import '../features/wishlist/presentation/roulette_screen.dart';
 import '../features/wishlist/presentation/suggestions_screen.dart';
 import '../features/wishlist/presentation/wish_form_screen.dart';
 import '../features/wishlist/presentation/wishlist_screen.dart';
+import '../features/wrapped/presentation/wrapped_screen.dart';
+import '../l10n/app_localizations.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
+
+/// Locations reachable without a session. Everything else is gated. Matching is
+/// exact or by `/prefix/` so `/auth/reset-password` (an email deep link) stays
+/// open while `/dates/:id` does not.
+const _publicPrefixes = <String>[
+  '/onboarding',
+  '/login',
+  '/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+];
+
+bool isPublicLocation(String loc) {
+  for (final p in _publicPrefixes) {
+    if (loc == p || loc.startsWith('$p/')) return true;
+  }
+  return false;
+}
 
 /// All routes in the design. The four main sections live under a
 /// [StatefulShellRoute] so the bottom bar persists across them; everything else
 /// is pushed on the root navigator and covers the bar.
 final routerProvider = Provider<GoRouter>((ref) {
+  // Bridges the session state to go_router: the redirect below re-runs whenever
+  // it changes (audit F-H1: there was no refreshListenable, so a failed token
+  // refresh cleared the session but left the user stranded on /home with every
+  // call 401ing).
+  final authChanged = ValueNotifier<AuthStatus>(
+    ref.read(sessionControllerProvider),
+  );
+  ref.onDispose(authChanged.dispose);
+  ref.listen<AuthStatus>(sessionControllerProvider, (_, next) {
+    authChanged.value = next;
+  });
+
   return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/splash',
+    refreshListenable: authChanged,
+    redirect: (context, state) {
+      final status = ref.read(sessionControllerProvider);
+      final loc = state.matchedLocation;
+
+      // /splash owns bootstrap and routes onward itself.
+      if (loc == '/splash') return null;
+
+      final public = isPublicLocation(loc);
+
+      switch (status) {
+        case AuthStatus.unknown:
+          // Session not resolved yet — hold on /splash unless already public.
+          return public ? null : '/splash';
+        case AuthStatus.unauthenticated:
+          return public ? null : '/onboarding';
+        case AuthStatus.authenticated:
+          // Signed in: don't sit on the entry screens.
+          if (loc == '/onboarding' || loc == '/login' || loc == '/register') {
+            return '/home';
+          }
+          return null;
+      }
+    },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, __) => const OnboardingScreen(),
+      ),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
 
       // Pairing (slice: couples)
-      GoRoute(path: '/couple/setup', builder: (_, __) => const CoupleSetupScreen()),
-      GoRoute(path: '/couple/create', builder: (_, __) => const CoupleCreateScreen()),
-      GoRoute(path: '/couple/join', builder: (_, __) => const CoupleJoinScreen()),
-      GoRoute(path: '/couple/waiting', builder: (_, __) => const CoupleWaitingScreen()),
+      GoRoute(
+        path: '/couple/setup',
+        builder: (_, __) => const CoupleSetupScreen(),
+      ),
+      GoRoute(
+        path: '/couple/create',
+        builder: (_, __) => const CoupleCreateScreen(),
+      ),
+      GoRoute(
+        path: '/couple/join',
+        builder: (_, __) => const CoupleJoinScreen(),
+      ),
+      GoRoute(
+        path: '/couple/waiting',
+        builder: (_, __) => const CoupleWaitingScreen(),
+      ),
 
       // --- The four main sections, with the persistent bottom bar ---
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => ScaffoldWithNavBar(navigationShell: shell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/dates', builder: (_, __) => const TimelineScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/places/map', builder: (_, __) => const PlacesMapScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
-          ]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/dates',
+                builder: (_, __) => const TimelineScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/places/map',
+                builder: (_, __) => const PlacesMapScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (_, __) => const ProfileScreen(),
+              ),
+            ],
+          ),
         ],
       ),
 
       // Register a date (modal stack over the bar)
-      GoRoute(path: '/dates/new', builder: (_, __) => const PlaceSearchScreen()),
+      GoRoute(
+        path: '/dates/new',
+        builder: (_, __) => const PlaceSearchScreen(),
+      ),
       GoRoute(
         path: '/dates/new/details',
         builder: (_, s) => DateDetailsScreen(place: s.extra as Place?),
@@ -102,7 +193,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => DateDetailScreen(dateId: s.pathParameters['id']!),
       ),
 
-      GoRoute(path: '/places/poster', builder: (_, __) => const MapPosterScreen()),
+      GoRoute(
+        path: '/places/poster',
+        builder: (_, __) => const MapPosterScreen(),
+      ),
       GoRoute(path: '/summary', builder: (_, __) => const SummaryScreen()),
       GoRoute(
         path: '/places/:id',
@@ -110,19 +204,38 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Resilient streak (slice: streak protection)
-      GoRoute(path: '/streak/protect', builder: (_, __) => const ProtectScreen()),
-      GoRoute(path: '/streak/freeze/new', builder: (_, __) => const FreezeFormScreen()),
-      GoRoute(path: '/streak/repair/new', builder: (_, __) => const RepairFormScreen()),
+      GoRoute(
+        path: '/streak/protect',
+        builder: (_, __) => const ProtectScreen(),
+      ),
+      GoRoute(
+        path: '/streak/freeze/new',
+        builder: (_, __) => const FreezeFormScreen(),
+      ),
+      GoRoute(
+        path: '/streak/repair/new',
+        builder: (_, __) => const RepairFormScreen(),
+      ),
       GoRoute(
         path: '/streak/repair/:id',
-        builder: (_, s) => RepairConfirmScreen(repairId: s.pathParameters['id']!),
+        builder: (_, s) =>
+            RepairConfirmScreen(repairId: s.pathParameters['id']!),
       ),
 
       // Wishlist & suggestions (slice: wishlist)
       GoRoute(path: '/wishlist', builder: (_, __) => const WishlistScreen()),
-      GoRoute(path: '/wishlist/new', builder: (_, __) => const WishFormScreen()),
-      GoRoute(path: '/wishlist/roulette', builder: (_, __) => const RouletteScreen()),
-      GoRoute(path: '/suggestions', builder: (_, __) => const SuggestionsScreen()),
+      GoRoute(
+        path: '/wishlist/new',
+        builder: (_, __) => const WishFormScreen(),
+      ),
+      GoRoute(
+        path: '/wishlist/roulette',
+        builder: (_, __) => const RouletteScreen(),
+      ),
+      GoRoute(
+        path: '/suggestions',
+        builder: (_, __) => const SuggestionsScreen(),
+      ),
 
       // Plans & calendar (slice: plans)
       GoRoute(path: '/calendar', builder: (_, __) => const CalendarScreen()),
@@ -143,24 +256,85 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Profile & account (settings stack over the bar)
       GoRoute(path: '/account', builder: (_, __) => const AccountScreen()),
-      GoRoute(path: '/profile/notifications', builder: (_, __) => const NotificationsScreen()),
-      GoRoute(path: '/profile/privacy', builder: (_, __) => const PrivacyScreen()),
-      GoRoute(path: '/profile/language', builder: (_, __) => const LanguageScreen()),
-      GoRoute(path: '/milestones', builder: (_, __) => const MilestonesScreen()),
+      GoRoute(
+        path: '/profile/notifications',
+        builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/privacy',
+        builder: (_, __) => const PrivacyScreen(),
+      ),
+      GoRoute(
+        path: '/profile/language',
+        builder: (_, __) => const LanguageScreen(),
+      ),
+      GoRoute(
+        path: '/milestones',
+        builder: (_, __) => const MilestonesScreen(),
+      ),
       GoRoute(path: '/wrapped', builder: (_, __) => const WrappedScreen()),
       GoRoute(path: '/activity', builder: (_, __) => const ActivityScreen()),
 
       // Account recovery (E10)
-      GoRoute(path: '/auth/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
+      GoRoute(
+        path: '/auth/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
       GoRoute(
         path: '/auth/reset-password',
-        builder: (_, s) => ResetPasswordScreen(token: s.uri.queryParameters['token']),
+        builder: (_, s) =>
+            ResetPasswordScreen(token: s.uri.queryParameters['token']),
       ),
       GoRoute(
         path: '/auth/verify-email',
-        builder: (_, s) => VerifyEmailScreen(token: s.uri.queryParameters['token']),
+        builder: (_, s) =>
+            VerifyEmailScreen(token: s.uri.queryParameters['token']),
       ),
     ],
-    errorBuilder: (_, state) => PlaceholderScreen(title: 'Ruta no encontrada: ${state.uri}'),
+    errorBuilder: (context, state) => _RouteNotFound(uri: state.uri),
   );
 });
+
+/// The router's fallback for an unknown location: a localized message and a way
+/// back, instead of a hardcoded Spanish string with the raw URI (audit F,
+/// medium).
+class _RouteNotFound extends StatelessWidget {
+  const _RouteNotFound({required this.uri});
+
+  final Uri uri;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.explore_off_outlined,
+                size: 40,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.routeNotFound,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.go('/home'),
+                child: Text(l10n.commonGoHome),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

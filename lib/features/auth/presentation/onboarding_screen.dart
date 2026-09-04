@@ -55,9 +55,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () => context.push('/login'),
+                  onPressed: () => context.go('/login'),
                   style: TextButton.styleFrom(
-                      foregroundColor: Colors.white.withValues(alpha: 0.7)),
+                    foregroundColor: Colors.white.withValues(alpha: 0.7),
+                  ),
                   child: Text(l10n.onboardingSkip),
                 ),
               ),
@@ -79,9 +80,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(40),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
                             ),
-                            child: Icon(_icons[i], color: Colors.white, size: 56),
+                            child: Icon(
+                              _icons[i],
+                              color: Colors.white,
+                              size: 56,
+                            ),
                           ),
                           const SizedBox(height: RachaTokens.space6),
                           Text(
@@ -116,7 +123,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   final active = i == _page;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: RachaTokens.space1),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: RachaTokens.space1,
+                    ),
                     width: active ? RachaTokens.space5 : RachaTokens.space2,
                     height: RachaTokens.space2,
                     decoration: BoxDecoration(
@@ -133,16 +142,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         children: [
                           _WhiteButton(
                             label: l10n.onboardingCreateAccount,
-                            onPressed: () => context.push('/register'),
+                            onPressed: () => context.go('/register'),
                           ),
                           const SizedBox(height: RachaTokens.space2),
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.white,
-                              side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.4),
+                              ),
                               minimumSize: const Size.fromHeight(52),
                             ),
-                            onPressed: () => context.push('/login'),
+                            onPressed: () => context.go('/login'),
                             child: Text(l10n.onboardingSignIn),
                           ),
                         ],

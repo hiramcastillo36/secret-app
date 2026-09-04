@@ -1,0 +1,10 @@
+# Copy to android/key.properties (git-ignored) on the release build machine.
+# Generate the keystore once:
+#   keytool -genkey -v -keystore ~/racha-upload.jks -keyalg RSA -keysize 2048 \
+#           -validity 10000 -alias upload
+# Then enrol in Play App Signing so Google holds the app signing key and this
+# one is only the upload key.
+storePassword=changeme
+keyPassword=changeme
+keyAlias=upload
+storeFile=/absolute/path/to/racha-upload.jks

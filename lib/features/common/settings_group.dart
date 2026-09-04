@@ -17,7 +17,9 @@ class SettingsGroup extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: RachaTokens.brM,
         border: Border.all(
-          color: danger ? scheme.error.withValues(alpha: 0.4) : scheme.outlineVariant,
+          color: danger
+              ? scheme.error.withValues(alpha: 0.4)
+              : scheme.outlineVariant,
           width: RachaTokens.borderHairline,
         ),
       ),
@@ -61,25 +63,39 @@ class SettingsRow extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: RachaTokens.space4, vertical: RachaTokens.space3),
+          horizontal: RachaTokens.space4,
+          vertical: RachaTokens.space3,
+        ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: danger ? scheme.error : scheme.onSurfaceVariant),
+            Icon(
+              icon,
+              size: 20,
+              color: danger ? scheme.error : scheme.onSurfaceVariant,
+            ),
             const SizedBox(width: RachaTokens.space3),
             Expanded(
-              child: Text(label,
-                  style: TextStyle(
-                      color: color,
-                      fontSize: RachaType.callout,
-                      fontWeight: FontWeight.w600)),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: RachaType.callout,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
             if (value != null) ...[
-              Text(value!,
-                  style: TextStyle(
-                      color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+              Text(
+                value!,
+                style: TextStyle(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: RachaType.caption,
+                ),
+              ),
               const SizedBox(width: RachaTokens.space1),
             ],
-            if (!danger) Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            if (!danger)
+              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
           ],
         ),
       ),

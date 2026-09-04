@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
-import '../../auth/data/auth_repository.dart';
+import '../../auth/application/auth.dart';
 import '../../common/section_label.dart';
 import '../../common/stat_tile.dart';
-import '../../couple/data/couple_repository.dart';
-import '../../notifications/data/notifications_repository.dart';
-import '../../plans/data/plans_repository.dart';
+import '../../couple/application/couple.dart';
+import '../../notifications/application/notifications.dart';
+import '../../plans/application/plans.dart';
 import '../../plans/domain/models.dart';
-import '../../streak/data/protect_repository.dart';
-import '../../wishlist/data/wishlist_repository.dart';
-import '../data/dates_repository.dart';
+import '../../streak/application/protect.dart';
+import '../../wishlist/application/wishlist.dart';
+import '../application/dates.dart';
 import '../domain/models.dart';
 import 'date_format.dart';
 
@@ -35,7 +36,8 @@ class HomeScreen extends ConsumerWidget {
     final wishes = ref.watch(wishlistProvider).valueOrNull;
     final overview = ref.watch(overviewProvider).valueOrNull;
     final places = ref.watch(summaryPlacesProvider).valueOrNull;
-    final coupleName = ref.watch(coupleMeProvider).valueOrNull?.couple.name ?? me?.coupleName;
+    final coupleName =
+        ref.watch(coupleMeProvider).valueOrNull?.couple.name ?? me?.coupleName;
 
     return Scaffold(
       appBar: AppBar(
@@ -43,6 +45,7 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () => context.push('/calendar'),
+            tooltip: l10n.a11yCalendar,
             icon: const Icon(Icons.calendar_month_outlined),
           ),
           IconButton(
@@ -50,9 +53,17 @@ class HomeScreen extends ConsumerWidget {
               await context.push('/activity');
               ref.invalidate(unreadNotificationsProvider);
             },
+            tooltip: unread > 0
+                ? l10n.a11yNotificationsUnread(unread)
+                : l10n.a11yNotifications,
             icon: Badge(
               isLabelVisible: unread > 0,
-              label: Text(unread > 99 ? '99+' : '$unread'),
+              // The count is already in the button's tooltip/label; keep the
+              // visual badge out of the semantics tree to avoid it being read
+              // as a separate, context-free number.
+              label: ExcludeSemantics(
+                child: Text(unread > 99 ? '99+' : '$unread'),
+              ),
               child: const Icon(Icons.notifications_none_outlined),
             ),
           ),
@@ -67,12 +78,22 @@ class HomeScreen extends ConsumerWidget {
           await ref.read(streakProvider.future);
         },
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(RachaTokens.space5, RachaTokens.space5,
-              RachaTokens.space5, RachaTokens.space7 + RachaTokens.space5),
+          padding: const EdgeInsets.fromLTRB(
+            RachaTokens.space5,
+            RachaTokens.space5,
+            RachaTokens.space5,
+            RachaTokens.space7 + RachaTokens.space5,
+          ),
           children: [
             if (me != null && me.user.pendingDeletion)
               _Banner(
-                text: l10n.homeDeletionBanner,
+                text: me.deletionScheduledFor != null
+                    ? l10n.homeDeletionBannerOn(
+                        DateFormat.yMMMMd(
+                          Localizations.localeOf(context).toString(),
+                        ).format(me.deletionScheduledFor!),
+                      )
+                    : l10n.homeDeletionBanner,
                 strong: true,
                 actionLabel: l10n.homeCancelDeletion,
                 onAction: () => context.push('/account'),
@@ -89,7 +110,9 @@ class HomeScreen extends ConsumerWidget {
                 strong: true,
                 actionLabel: l10n.homePlanRespond,
                 onAction: () async {
-                  await context.push('/streak/repair/${hub!.needsMyAnswer!.id}');
+                  await context.push(
+                    '/streak/repair/${hub!.needsMyAnswer!.id}',
+                  );
                   ref.invalidate(protectHubProvider);
                   ref.invalidate(streakProvider);
                 },
@@ -97,21 +120,31 @@ class HomeScreen extends ConsumerWidget {
 
             streak.when(
               loading: () => const _CounterSkeleton(),
-              error: (_, __) => _RetryTile(onRetry: () => ref.invalidate(streakProvider)),
+              error: (_, __) =>
+                  _RetryTile(onRetry: () => ref.invalidate(streakProvider)),
               data: (s) => _StreakHero(streak: s),
             ),
 
             if (overview != null) ...[
               const SizedBox(height: RachaTokens.space4),
-              Row(children: [
-                StatTile(value: '${overview.totalDates}', label: l10n.homeStatTotal),
-                const SizedBox(width: RachaTokens.space3),
-                StatTile(
+              Row(
+                children: [
+                  StatTile(
+                    value: '${overview.totalDates}',
+                    label: l10n.homeStatTotal,
+                  ),
+                  const SizedBox(width: RachaTokens.space3),
+                  StatTile(
                     value: l10n.wrappedWeeksShort(overview.longestStreak),
-                    label: l10n.homeStatRecord),
-                const SizedBox(width: RachaTokens.space3),
-                StatTile(value: '${_thisMonthCount(overview)}', label: l10n.homeStatMonth),
-              ]),
+                    label: l10n.homeStatRecord,
+                  ),
+                  const SizedBox(width: RachaTokens.space3),
+                  StatTile(
+                    value: '${_thisMonthCount(overview)}',
+                    label: l10n.homeStatMonth,
+                  ),
+                ],
+              ),
             ],
 
             if (plans != null) ...[
@@ -126,7 +159,9 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: RachaTokens.space6),
             recent.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => _RetryTile(onRetry: () => ref.invalidate(recentDatesProvider)),
+              error: (_, __) => _RetryTile(
+                onRetry: () => ref.invalidate(recentDatesProvider),
+              ),
               data: (page) => _RecentSection(dates: page.dates),
             ),
 
@@ -156,8 +191,16 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  int _thisMonthCount(Overview ov) =>
-      ov.datesByMonth.isEmpty ? 0 : ov.datesByMonth.last.count;
+  int _thisMonthCount(Overview ov) {
+    // Match the current month explicitly; the last array element is last month
+    // when nothing has been logged yet this month (audit F, low).
+    final now = DateTime.now();
+    final key = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    for (final m in ov.datesByMonth) {
+      if (m.month == key || m.month == now.month.toString()) return m.count;
+    }
+    return 0;
+  }
 }
 
 /// The one element allowed to shout: a plum hero with the animated week count,
@@ -171,7 +214,9 @@ class _StreakHero extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
-          vertical: RachaTokens.space6, horizontal: RachaTokens.space5),
+        vertical: RachaTokens.space6,
+        horizontal: RachaTokens.space5,
+      ),
       decoration: const BoxDecoration(
         borderRadius: RachaTokens.brL,
         gradient: LinearGradient(
@@ -186,7 +231,11 @@ class _StreakHero extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Icon(Icons.local_fire_department, color: Colors.white, size: 40),
+              const Icon(
+                Icons.local_fire_department,
+                color: Colors.white,
+                size: 40,
+              ),
               const SizedBox(width: RachaTokens.space3),
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: streak.currentStreak.toDouble()),
@@ -210,16 +259,19 @@ class _StreakHero extends StatelessWidget {
           Text(
             l10n.homeStreakConsecutive,
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontWeight: FontWeight.w600,
-                fontSize: RachaType.callout),
+              color: Colors.white.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w600,
+              fontSize: RachaType.callout,
+            ),
           ),
           if (streak.season.best > streak.currentStreak) ...[
             const SizedBox(height: 2),
             Text(
               l10n.homeSeasonBest(streak.season.best),
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5), fontSize: RachaType.caption),
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: RachaType.caption,
+              ),
             ),
           ],
           const SizedBox(height: RachaTokens.space5),
@@ -232,7 +284,9 @@ class _StreakHero extends StatelessWidget {
               l10n.homeWeekCoveredCheer,
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6), fontSize: RachaType.caption),
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: RachaType.caption,
+              ),
             ),
           ],
         ],
@@ -248,34 +302,45 @@ class _WeekStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final dots = weeks.isEmpty ? List<bool>.filled(12, false) : weeks;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < dots.length; i++)
-          Builder(builder: (_) {
-            final isFrozen = i < frozen.length && frozen[i] && !dots[i];
-            final Color fill;
-            if (dots[i]) {
-              fill = Colors.white;
-            } else if (isFrozen) {
-              fill = RachaTokens.atRiskDark;
-            } else {
-              fill = Colors.white.withValues(alpha: 0.22);
-            }
-            // Older weeks fade slightly so the eye lands on the recent end.
-            final age = dots.length <= 1 ? 1.0 : 0.55 + (i / (dots.length - 1)) * 0.45;
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: fill.withValues(alpha: (fill.a * age).clamp(0, 1)),
-              ),
-            );
-          }),
-      ],
+    final done = dots.where((w) => w).length;
+    return Semantics(
+      container: true,
+      excludeSemantics: true,
+      label: '${l10n.a11yWeekStrip}: $done/${dots.length}',
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (var i = 0; i < dots.length; i++)
+            Builder(
+              builder: (_) {
+                final isFrozen = i < frozen.length && frozen[i] && !dots[i];
+                final Color fill;
+                if (dots[i]) {
+                  fill = Colors.white;
+                } else if (isFrozen) {
+                  fill = RachaTokens.atRiskDark;
+                } else {
+                  fill = Colors.white.withValues(alpha: 0.22);
+                }
+                // Older weeks fade slightly so the eye lands on the recent end.
+                final age = dots.length <= 1
+                    ? 1.0
+                    : 0.55 + (i / (dots.length - 1)) * 0.45;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: fill.withValues(alpha: (fill.a * age).clamp(0, 1)),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }
@@ -290,20 +355,29 @@ class _StatusPill extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final (String label, Color fg) = switch (status) {
       WeekStatus.covered => (l10n.homeWeekCovered, RachaTokens.okLight),
-      WeekStatus.atRisk => (l10n.homeWeekAtRisk(daysLeft), RachaTokens.atRiskLight),
+      WeekStatus.atRisk => (
+        l10n.homeWeekAtRisk(daysLeft),
+        RachaTokens.atRiskLight,
+      ),
       WeekStatus.frozen => (l10n.homeStreakFrozen, RachaTokens.atRiskLight),
       WeekStatus.open => (l10n.homeWeekOpen, RachaTokens.seed),
     };
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: RachaTokens.space4, vertical: RachaTokens.space2),
+        horizontal: RachaTokens.space4,
+        vertical: RachaTokens.space2,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(RachaTokens.radiusFull),
       ),
       child: Text(
         label,
-        style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: RachaType.callout),
+        style: TextStyle(
+          color: fg,
+          fontWeight: FontWeight.w700,
+          fontSize: RachaType.callout,
+        ),
       ),
     );
   }
@@ -321,12 +395,20 @@ class _RecentSection extends StatelessWidget {
     if (dates.isEmpty) {
       return Column(
         children: [
-          Text(l10n.homeEmptyTitle,
-              style: const TextStyle(fontSize: RachaType.headline, fontWeight: FontWeight.w700),
-              textAlign: TextAlign.center),
+          Text(
+            l10n.homeEmptyTitle,
+            style: const TextStyle(
+              fontSize: RachaType.headline,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: RachaTokens.space2),
-          Text(l10n.homeEmptyBody,
-              style: TextStyle(color: scheme.onSurfaceVariant), textAlign: TextAlign.center),
+          Text(
+            l10n.homeEmptyBody,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
         ],
       );
     }
@@ -339,9 +421,9 @@ class _RecentSection extends StatelessWidget {
           trailing: TextButton(
             onPressed: () => context.push('/dates'),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: RachaTokens.space2),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(
+                horizontal: RachaTokens.space2,
+              ),
             ),
             child: Text(l10n.homeSeeAll),
           ),
@@ -352,7 +434,8 @@ class _RecentSection extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: dates.length,
-            separatorBuilder: (_, __) => const SizedBox(width: RachaTokens.space3),
+            separatorBuilder: (_, __) =>
+                const SizedBox(width: RachaTokens.space3),
             itemBuilder: (context, i) => _MiniDateCard(date: dates[i]),
           ),
         ),
@@ -383,16 +466,28 @@ class _MiniDateCard extends StatelessWidget {
                 color: scheme.primaryContainer,
                 borderRadius: RachaTokens.brM,
               ),
-              child: Icon(categoryIcon(date.place?.category ?? 'other'),
-                  color: scheme.onPrimaryContainer),
+              child: Icon(
+                categoryIcon(date.place?.category ?? 'other'),
+                color: scheme.onPrimaryContainer,
+              ),
             ),
             const SizedBox(height: RachaTokens.space2),
-            Text(date.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: RachaType.caption)),
-            Text(relativeDay(context, date.happenedAt),
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: RachaType.micro)),
+            Text(
+              date.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: RachaType.caption,
+              ),
+            ),
+            Text(
+              relativeDay(context, date.happenedAt),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: RachaType.micro,
+              ),
+            ),
             const SizedBox(height: 2),
             if (date.rating != null) _RatingDots(rating: date.rating!),
           ],
@@ -409,19 +504,23 @@ class _RatingDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        for (var n = 1; n <= 5; n++)
-          Container(
-            margin: const EdgeInsets.only(right: 3),
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: n <= rating ? scheme.primary : scheme.outlineVariant,
+    return Semantics(
+      excludeSemantics: true,
+      label: AppLocalizations.of(context).a11yRatingStars(rating),
+      child: Row(
+        children: [
+          for (var n = 1; n <= 5; n++)
+            Container(
+              margin: const EdgeInsets.only(right: 3),
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: n <= rating ? scheme.primary : scheme.outlineVariant,
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -435,14 +534,19 @@ class _FavPlaceCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: place.placeId.isEmpty ? null : () => context.push('/places/${place.placeId}'),
+      onTap: place.placeId.isEmpty
+          ? null
+          : () => context.push('/places/${place.placeId}'),
       borderRadius: RachaTokens.brM,
       child: Container(
         padding: const EdgeInsets.all(RachaTokens.space3),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: RachaTokens.brM,
-          border: Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          border: Border.all(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
         child: Row(
           children: [
@@ -453,20 +557,30 @@ class _FavPlaceCard extends StatelessWidget {
                 color: scheme.primaryContainer,
                 borderRadius: RachaTokens.brS,
               ),
-              child: Icon(categoryIcon(place.category), color: scheme.onPrimaryContainer, size: 22),
+              child: Icon(
+                categoryIcon(place.category),
+                color: scheme.onPrimaryContainer,
+                size: 22,
+              ),
             ),
             const SizedBox(width: RachaTokens.space3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(place.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700)),
-                  Text('${l10n.summaryVisitsCount(place.visits)} · ${place.category}',
-                      style: TextStyle(
-                          color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                  Text(
+                    place.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    '${l10n.summaryVisitsCount(place.visits)} · ${place.category}',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: RachaType.caption,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -494,15 +608,20 @@ class _ProtectShortcut extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest,
           borderRadius: RachaTokens.brM,
-          border: Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          border: Border.all(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
         child: Row(
           children: [
             Icon(Icons.shield_outlined, color: scheme.onSurfaceVariant),
             const SizedBox(width: RachaTokens.space3),
             Expanded(
-              child: Text(l10n.protectTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              child: Text(
+                l10n.protectTitle,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
             Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
           ],
@@ -533,7 +652,11 @@ class _Banner extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: RachaTokens.space4),
       padding: const EdgeInsets.fromLTRB(
-          RachaTokens.space4, RachaTokens.space2, RachaTokens.space2, RachaTokens.space2),
+        RachaTokens.space4,
+        RachaTokens.space2,
+        RachaTokens.space2,
+        RachaTokens.space2,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: RachaTokens.brM,
@@ -544,7 +667,9 @@ class _Banner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: Text(text, style: TextStyle(color: fg))),
+          Expanded(
+            child: Text(text, style: TextStyle(color: fg)),
+          ),
           TextButton(onPressed: onAction, child: Text(actionLabel)),
         ],
       ),
@@ -555,14 +680,20 @@ class _Banner extends StatelessWidget {
 /// The next dated plan, shown below the counter. If a plan is waiting for the
 /// viewer's answer, it becomes a prompt with a Respond button.
 class _NextPlan extends StatelessWidget {
-  const _NextPlan({required this.plans, required this.myId, required this.onChanged});
+  const _NextPlan({
+    required this.plans,
+    required this.myId,
+    required this.onChanged,
+  });
   final PlanList plans;
   final String? myId;
   final VoidCallback onChanged;
 
   Plan? get _awaitingMe {
     for (final p in plans.plans) {
-      if (p.status == 'proposed' && myId != null && p.proposedBy != myId) return p;
+      if (p.status == 'proposed' && myId != null && p.proposedBy != myId) {
+        return p;
+      }
     }
     return null;
   }
@@ -586,7 +717,9 @@ class _NextPlan extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(RachaTokens.space4),
           decoration: BoxDecoration(
-            color: prompt ? scheme.primaryContainer : scheme.surfaceContainerLow,
+            color: prompt
+                ? scheme.primaryContainer
+                : scheme.surfaceContainerLow,
             borderRadius: RachaTokens.brM,
             border: Border.all(
               color: prompt ? scheme.primary : scheme.outlineVariant,
@@ -595,8 +728,14 @@ class _NextPlan extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(prompt ? Icons.mark_email_unread_outlined : Icons.event_available_outlined,
-                  color: prompt ? scheme.onPrimaryContainer : scheme.onSurfaceVariant),
+              Icon(
+                prompt
+                    ? Icons.mark_email_unread_outlined
+                    : Icons.event_available_outlined,
+                color: prompt
+                    ? scheme.onPrimaryContainer
+                    : scheme.onSurfaceVariant,
+              ),
               const SizedBox(width: RachaTokens.space3),
               Expanded(
                 child: Column(
@@ -610,14 +749,20 @@ class _NextPlan extends StatelessWidget {
                           color: scheme.onPrimaryContainer,
                         ),
                       ),
-                    Text(plan.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      plan.title,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     if (plan.scheduledAt != null)
-                      Text(relativeDay(context, plan.scheduledAt!),
-                          style: TextStyle(
-                              fontSize: RachaType.caption,
-                              color: prompt
-                                  ? scheme.onPrimaryContainer
-                                  : scheme.onSurfaceVariant)),
+                      Text(
+                        relativeDay(context, plan.scheduledAt!),
+                        style: TextStyle(
+                          fontSize: RachaType.caption,
+                          color: prompt
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSurfaceVariant,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -653,7 +798,10 @@ class _WishlistCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
           borderRadius: RachaTokens.brM,
-          border: Border.all(color: scheme.outlineVariant, width: RachaTokens.borderHairline),
+          border: Border.all(
+            color: scheme.outlineVariant,
+            width: RachaTokens.borderHairline,
+          ),
         ),
         child: Row(
           children: [
@@ -663,9 +811,17 @@ class _WishlistCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.homeWishlistCard, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  Text(l10n.homeWishlistWaiting(open),
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: RachaType.caption)),
+                  Text(
+                    l10n.homeWishlistCard,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    l10n.homeWishlistWaiting(open),
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: RachaType.caption,
+                    ),
+                  ),
                 ],
               ),
             ),

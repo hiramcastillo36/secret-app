@@ -1,4 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
+
+import '../../l10n/app_localizations.dart';
 
 /// A typed view of the backend's uniform error envelope:
 /// `{ "error": { "code": "...", "message": "...", "details": {...} } }`.
@@ -25,27 +28,35 @@ class ApiException implements Exception {
         e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.sendTimeout) {
-      return ApiException(
-        code: 'NETWORK',
-        message: 'Sin conexión.',
-        isNetwork: true,
-      );
+      // No server message to lean on — the empty message is filled in by
+      // [localizedMessage] (audit F, medium: this was a fixed Spanish string
+      // shown inside an otherwise-English UI).
+      return ApiException(code: 'NETWORK', message: '', isNetwork: true);
     }
     final data = e.response?.data;
     if (data is Map && data['error'] is Map) {
       final err = (data['error'] as Map).cast<String, dynamic>();
       return ApiException(
         code: (err['code'] ?? 'UNKNOWN').toString(),
-        message: (err['message'] ?? 'Algo salió mal.').toString(),
+        message: (err['message'] ?? '').toString(),
         status: e.response?.statusCode,
         details: err['details'],
       );
     }
     return ApiException(
       code: 'UNKNOWN',
-      message: 'Algo salió mal.',
+      message: '',
       status: e.response?.statusCode,
     );
+  }
+
+  /// The message to show a user: the server's localized [message] when there is
+  /// one, otherwise a localized fallback for the offline / unknown cases.
+  String localizedMessage(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (isNetwork) return l10n.commonNoConnection;
+    if (message.trim().isEmpty) return l10n.commonSomethingWentWrong;
+    return message;
   }
 
   @override
