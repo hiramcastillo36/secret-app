@@ -48,6 +48,17 @@ class CoupleRepository {
     }
   }
 
+  /// POST /couples/me/invite — issue a fresh invite code while the couple is
+  /// still pending; the previous code stops working the instant this returns.
+  /// Callers refetch [coupleMeProvider] to pick up the new code.
+  Future<void> rotateInvite() async {
+    try {
+      await _dio.post<Map<String, dynamic>>('/couples/me/invite');
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
   /// PATCH /couples/me — change the couple name and/or its IANA timezone
   /// (the server recalculates the streak against the new week boundaries).
   Future<Couple> updateSettings({String? name, String? timezone}) async {

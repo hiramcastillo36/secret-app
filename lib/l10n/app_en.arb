@@ -115,11 +115,17 @@
   "dateFieldRating": "Rating",
   "dateFieldNotes": "Notes",
   "dateFieldCost": "Cost",
+  "dateFieldPhotos": "Photos (optional)",
   "dateTagBoth": "Both of you",
   "dateTagWarning": "If you remove your partner, this date won't count toward the streak.",
   "dateSave": "Save date",
+  "dateSavePhotosUploading": "Uploading photos…",
   "dateSavedStreakUp": "Streak advanced!",
   "dateErrorFuture": "You can't log a date in the future.",
+
+  "photoAdd": "Add photo",
+  "photoRemove": "Remove photo",
+  "photoUnsupportedType": "That file type isn't supported.",
 
   "timelineTitle": "Our dates",
   "timelineEmpty": "No dates yet. Log your first one.",
@@ -134,6 +140,9 @@
   "@dateDetailDeleteWarnsStreak": { "placeholders": { "count": { "type": "int" } } },
   "dateDetailDeleted": "Date deleted.",
   "dateDetailStreakDropped": "The streak dropped.",
+  "dateDetailRemovePhoto": "Remove photo",
+  "dateDetailRemovePhotoTitle": "Remove this photo?",
+  "dateDetailRemovePhotoBody": "This can't be undone.",
   "dateEditTitle": "Edit date",
   "dateEditSave": "Save changes",
 
@@ -187,6 +196,7 @@
   "verifyConfirm": "Confirm",
 
   "accountTitle": "My account",
+  "accountChangeAvatar": "Change photo",
   "accountEmail": "Email",
   "accountVerified": "Verified",
   "accountUnverified": "Not verified",
@@ -563,6 +573,15 @@
   "planHasDateSub": "With no date it's saved as an idea",
   "planNoteIdea": "It's saved as an idea in the calendar's Ideas tab.",
   "planNoteProposed": "Your partner gets a nudge to confirm the plan.",
+
+  "coupleWaitingRotate": "Get a new code",
+  "coupleWaitingRotated": "New code ready",
+  "profileInviteRotate": "New code",
+
+  "dateTagPendingTitle": "You were tagged in this date",
+  "dateTagPendingBody": "Confirm you were there, or remove yourself. It only counts for the streak if you confirm.",
+  "dateTagConfirm": "Yes, I was there",
+  "dateTagReject": "Remove me",
 
   "navHome": "Home",
   "navDates": "Dates",

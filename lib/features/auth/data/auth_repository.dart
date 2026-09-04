@@ -127,6 +127,36 @@ class AuthRepository {
     }
   }
 
+  /// PATCH /me — sets the avatar to an already-confirmed media id (see
+  /// MediaRepository.upload). Returns the updated user so the caller can
+  /// refresh its cache.
+  Future<AppUser> updateAvatar(String mediaId) async {
+    try {
+      final res = await _dio.patch<Map<String, dynamic>>(
+        '/me',
+        data: {'avatar_media_id': mediaId},
+      );
+      return AppUser.fromJson(
+        (res.data!['user'] as Map).cast<String, dynamic>(),
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// PATCH /me/locale — persists the language for messages sent outside a
+  /// request (reminder emails, weekly recap, push), where there is no
+  /// Accept-Language header to negotiate from. Best effort, like [logout]:
+  /// every request already carries Accept-Language via the dio interceptor,
+  /// so a failure here only delays those out-of-band messages catching up.
+  Future<void> updateLocale(String locale) async {
+    try {
+      await _dio.patch<void>('/me/locale', data: {'locale': locale});
+    } on DioException catch (_) {
+      // ignore: best effort, see doc comment above
+    }
+  }
+
   /// Revokes the refresh token server-side. Best effort — local sign-out
   /// proceeds regardless — so a failure is swallowed rather than thrown.
   Future<void> logout(String refreshToken) async {

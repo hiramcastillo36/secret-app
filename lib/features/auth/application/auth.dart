@@ -50,6 +50,19 @@ class AuthActionsController extends AutoDisposeNotifier<void> {
   }
 
   Future<void> logout(String refreshToken) => _repo.logout(refreshToken);
+
+  /// Sets the avatar to an already-uploaded media id and refreshes the
+  /// cached profile.
+  Future<void> updateAvatar(String mediaId) async {
+    await _repo.updateAvatar(mediaId);
+    ref.invalidate(meProvider);
+  }
+
+  /// Tells the server which language to use for messages sent outside a
+  /// request (reminder emails, weekly recap, push). Fire-and-forget: never
+  /// blocks or surfaces an error to the language screen — see
+  /// [AuthRepository.updateLocale].
+  Future<void> syncLocale(String resolvedTag) => _repo.updateLocale(resolvedTag);
 }
 
 final authActionsProvider =

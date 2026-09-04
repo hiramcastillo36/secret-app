@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/api_exception.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../application/couple.dart';
@@ -25,6 +26,7 @@ class _CoupleWaitingScreenState extends ConsumerState<CoupleWaitingScreen>
   Timer? _poll;
   int _polls = 0;
   bool _stalled = false;
+  bool _rotating = false;
 
   // ~15 minutes at the capped 30s interval, then it stops and offers a manual
   // check (audit F, medium: it polled every 4s forever, no backoff, no cap and
@@ -90,6 +92,25 @@ class _CoupleWaitingScreenState extends ConsumerState<CoupleWaitingScreen>
   void _copy(String text, String toast) {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(toast)));
+  }
+
+  Future<void> _rotateInvite() async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _rotating = true);
+    try {
+      await ref.read(coupleControllerProvider.notifier).rotateInvite();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coupleWaitingRotated)));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
+    } finally {
+      if (mounted) setState(() => _rotating = false);
+    }
   }
 
   @override
@@ -273,6 +294,22 @@ class _CoupleWaitingScreenState extends ConsumerState<CoupleWaitingScreen>
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: RachaTokens.space3),
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: _rotating ? null : _rotateInvite,
+                        icon: _rotating
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.autorenew, size: 18),
+                        label: Text(l10n.coupleWaitingRotate),
+                      ),
                     ),
                     const SizedBox(height: RachaTokens.space6),
                     if (_stalled)

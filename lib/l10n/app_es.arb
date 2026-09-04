@@ -110,11 +110,17 @@
   "dateFieldRating": "Calificación",
   "dateFieldNotes": "Notas",
   "dateFieldCost": "Gasto",
+  "dateFieldPhotos": "Fotos (opcional)",
   "dateTagBoth": "Los dos",
   "dateTagWarning": "Si quitas a tu pareja, esta cita no cuenta para la racha.",
   "dateSave": "Guardar cita",
+  "dateSavePhotosUploading": "Subiendo fotos…",
   "dateSavedStreakUp": "¡La racha avanzó!",
   "dateErrorFuture": "No puedes registrar una cita en el futuro.",
+
+  "photoAdd": "Agregar foto",
+  "photoRemove": "Quitar foto",
+  "photoUnsupportedType": "Ese tipo de archivo no se admite.",
 
   "timelineTitle": "Nuestras citas",
   "timelineEmpty": "Aún no hay citas. Registra la primera.",
@@ -128,6 +134,9 @@
   "dateDetailDeleteWarnsStreak": "Esta cita cuenta para su racha de {count}. Borrarla podría bajarla.",
   "dateDetailDeleted": "Cita borrada.",
   "dateDetailStreakDropped": "La racha bajó.",
+  "dateDetailRemovePhoto": "Quitar foto",
+  "dateDetailRemovePhotoTitle": "¿Quitar esta foto?",
+  "dateDetailRemovePhotoBody": "Esto no se puede deshacer.",
   "dateEditTitle": "Editar cita",
   "dateEditSave": "Guardar cambios",
 
@@ -177,6 +186,7 @@
   "verifyConfirm": "Confirmar",
 
   "accountTitle": "Mi cuenta",
+  "accountChangeAvatar": "Cambiar foto",
   "accountEmail": "Correo",
   "accountVerified": "Verificado",
   "accountUnverified": "Sin verificar",
@@ -541,6 +551,15 @@
   "planHasDateSub": "Sin fecha se guarda como idea",
   "planNoteIdea": "Se guardará como idea en la pestaña Ideas del calendario.",
   "planNoteProposed": "Tu pareja recibirá un aviso para confirmar el plan.",
+
+  "coupleWaitingRotate": "Generar código nuevo",
+  "coupleWaitingRotated": "Nuevo código listo",
+  "profileInviteRotate": "Nuevo código",
+
+  "dateTagPendingTitle": "Te etiquetaron en esta cita",
+  "dateTagPendingBody": "Confirma que estuviste o quítate. Solo cuenta para la racha si confirmas.",
+  "dateTagConfirm": "Sí, estuve",
+  "dateTagReject": "Quitarme",
 
   "navHome": "Inicio",
   "navDates": "Citas",

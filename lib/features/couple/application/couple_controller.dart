@@ -55,6 +55,13 @@ class CoupleController extends AutoDisposeNotifier<AsyncValue<Object?>> {
         .updateSettings(name: name, timezone: timezone);
     ref.invalidate(coupleMeProvider);
   }
+
+  /// Issue a fresh invite code, replacing whatever was shared before. Throws
+  /// [ApiException] on failure so the caller can surface it.
+  Future<void> rotateInvite() async {
+    await ref.read(coupleRepositoryProvider).rotateInvite();
+    ref.invalidate(coupleMeProvider);
+  }
 }
 
 final coupleControllerProvider =

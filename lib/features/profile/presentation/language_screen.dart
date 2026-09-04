@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/i18n/locale_controller.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../auth/application/auth.dart';
 
-/// /profile/language — Automatic, Español or English. The choice is applied
-/// instantly (no restart) and stored on the device only.
+/// /profile/language — Automatic, Español or English. The choice applies
+/// instantly (no restart) and is stored on the device; it is also pushed to
+/// the server (PATCH /me/locale) so reminder emails and push, which have no
+/// request to read Accept-Language from, use it too.
 class LanguageScreen extends ConsumerWidget {
   const LanguageScreen({super.key});
 
@@ -27,7 +30,12 @@ class LanguageScreen extends ConsumerWidget {
         subtitle: subtitle == null ? null : Text(subtitle),
         trailing: selected ? Icon(Icons.check, color: scheme.primary) : null,
         selected: selected,
-        onTap: () => controller.set(value),
+        onTap: () {
+          controller.set(value);
+          ref
+              .read(authActionsProvider.notifier)
+              .syncLocale(resolvedLanguageTag(value));
+        },
       );
     }
 

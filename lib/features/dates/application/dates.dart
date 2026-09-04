@@ -40,6 +40,7 @@ class DatesController extends AutoDisposeNotifier<void> {
     double? cost,
     String? currency,
     List<String>? participantIds,
+    List<String>? mediaIds,
     String? idempotencyKey,
   }) async {
     final res = await _repo.create(
@@ -51,6 +52,7 @@ class DatesController extends AutoDisposeNotifier<void> {
       cost: cost,
       currency: currency,
       participantIds: participantIds,
+      mediaIds: mediaIds,
       idempotencyKey: idempotencyKey,
     );
     _refreshFeeds();
@@ -83,6 +85,21 @@ class DatesController extends AutoDisposeNotifier<void> {
     final broken = await _repo.delete(id);
     _refreshFeeds();
     return broken;
+  }
+
+  /// Answers a pending tag on a date: confirm counts it toward the streak,
+  /// reject drops it. Refreshes the streak and summaries either way.
+  Future<DateEntry> respondParticipation(String id, {required bool confirm}) async {
+    final entry = await _repo.respondParticipation(id, confirm: confirm);
+    _refreshFeeds();
+    ref.invalidate(dateByIdProvider(id));
+    return entry;
+  }
+
+  /// Removes one photo from a date. Doesn't touch the streak.
+  Future<void> deletePhoto(String dateId, String photoId) async {
+    await _repo.deletePhoto(dateId, photoId);
+    ref.invalidate(dateByIdProvider(dateId));
   }
 
   /// Place autocomplete for the date form. Read-only.

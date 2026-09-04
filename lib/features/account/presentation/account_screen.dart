@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/i18n/locale_controller.dart';
+import '../../../core/media/media_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/tokens.dart';
 import '../../auth/application/auth.dart';
@@ -34,6 +36,14 @@ class AccountScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(RachaTokens.space5),
             children: [
+              Center(
+                child: _AvatarPicker(
+                  avatarUrl: user.avatarUrl,
+                  displayName: user.displayName,
+                  onUploaded: () => ref.invalidate(meProvider),
+                ),
+              ),
+              const SizedBox(height: RachaTokens.space5),
               Container(
                 padding: const EdgeInsets.all(RachaTokens.space4),
                 decoration: BoxDecoration(
@@ -124,6 +134,142 @@ class AccountScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Tap the avatar to replace it: pick one image, PATCH /uploads/sign -> PUT
+/// -> confirm, then PATCH /me with the new avatar_media_id.
+class _AvatarPicker extends ConsumerStatefulWidget {
+  const _AvatarPicker({
+    required this.avatarUrl,
+    required this.displayName,
+    required this.onUploaded,
+  });
+  final String? avatarUrl;
+  final String displayName;
+  final VoidCallback onUploaded;
+
+  @override
+  ConsumerState<_AvatarPicker> createState() => _AvatarPickerState();
+}
+
+class _AvatarPickerState extends ConsumerState<_AvatarPicker> {
+  bool _busy = false;
+
+  static String _initial(String name) =>
+      name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase();
+
+  Future<void> _pick() async {
+    final l10n = AppLocalizations.of(context);
+    XFile? file;
+    try {
+      file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+    } catch (_) {
+      return; // the platform declined — nothing to show
+    }
+    if (file == null || !mounted) return;
+
+    final contentType = mediaContentTypeForPath(file.path);
+    if (contentType == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.photoUnsupportedType)));
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      final bytes = await file.readAsBytes();
+      final media = await ref
+          .read(mediaRepositoryProvider)
+          .upload(
+            bytes: bytes,
+            contentType: contentType,
+            kind: MediaKind.avatar,
+          );
+      await ref.read(authActionsProvider.notifier).updateAvatar(media.id);
+      widget.onUploaded();
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: l10n.accountChangeAvatar,
+      child: InkWell(
+        onTap: _busy ? null : _pick,
+        customBorder: const CircleBorder(),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: scheme.primaryContainer,
+              backgroundImage:
+                  (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty)
+                  ? NetworkImage(widget.avatarUrl!)
+                  : null,
+              child: (widget.avatarUrl == null || widget.avatarUrl!.isEmpty)
+                  ? Text(
+                      _initial(widget.displayName),
+                      style: TextStyle(
+                        color: scheme.onPrimaryContainer,
+                        fontSize: RachaType.title,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    )
+                  : null,
+            ),
+            if (_busy)
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.black.withValues(alpha: 0.35),
+                child: const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            else
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.surface, width: 2),
+                  ),
+                  child: Icon(
+                    Icons.edit_outlined,
+                    size: 14,
+                    color: scheme.onPrimary,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

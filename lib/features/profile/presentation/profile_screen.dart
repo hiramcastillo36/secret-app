@@ -602,9 +602,35 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _InviteRow extends StatelessWidget {
+class _InviteRow extends ConsumerStatefulWidget {
   const _InviteRow({required this.code});
   final String code;
+
+  @override
+  ConsumerState<_InviteRow> createState() => _InviteRowState();
+}
+
+class _InviteRowState extends ConsumerState<_InviteRow> {
+  bool _rotating = false;
+
+  Future<void> _rotate() async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _rotating = true);
+    try {
+      await ref.read(coupleControllerProvider.notifier).rotateInvite();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coupleWaitingRotated)));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.localizedMessage(context))));
+    } finally {
+      if (mounted) setState(() => _rotating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -618,14 +644,31 @@ class _InviteRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.profileInviteCode,
-            style: const TextStyle(
-              fontSize: RachaType.callout,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.profileInviteCode,
+                  style: const TextStyle(
+                    fontSize: RachaType.callout,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: _rotating ? null : _rotate,
+                tooltip: l10n.profileInviteRotate,
+                icon: _rotating
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.autorenew, size: 18),
+              ),
+            ],
           ),
-          const SizedBox(height: RachaTokens.space2),
+          const SizedBox(height: RachaTokens.space1),
           Row(
             children: [
               Expanded(
@@ -643,7 +686,7 @@ class _InviteRow extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    code,
+                    widget.code,
                     style: TextStyle(
                       color: scheme.primary,
                       fontSize: RachaType.headline,
@@ -656,7 +699,7 @@ class _InviteRow extends StatelessWidget {
               const SizedBox(width: RachaTokens.space2),
               FilledButton.tonalIcon(
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: code));
+                  Clipboard.setData(ClipboardData(text: widget.code));
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text(l10n.profileCopied)));

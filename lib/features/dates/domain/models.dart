@@ -69,6 +69,31 @@ class DateParticipant {
   );
 }
 
+/// A photo attached to a date. [url] and [thumbUrl] are signed and expire —
+/// fetch a fresh [DateEntry] rather than caching them.
+class DatePhoto {
+  const DatePhoto({
+    required this.id,
+    required this.url,
+    this.thumbUrl,
+    this.blurhash,
+    this.position = 0,
+  });
+  final String id;
+  final String url;
+  final String? thumbUrl;
+  final String? blurhash;
+  final int position;
+
+  factory DatePhoto.fromJson(Map<String, dynamic> j) => DatePhoto(
+    id: (j['id'] ?? '') as String,
+    url: (j['url'] ?? '') as String,
+    thumbUrl: j['thumb_url'] as String?,
+    blurhash: j['blurhash'] as String?,
+    position: (j['position'] as num?)?.toInt() ?? 0,
+  );
+}
+
 class DateEntry {
   const DateEntry({
     required this.id,
@@ -82,6 +107,7 @@ class DateEntry {
     this.rating,
     this.cost,
     this.currency = 'MXN',
+    this.photos = const [],
   });
 
   final String id;
@@ -95,6 +121,7 @@ class DateEntry {
   final int? rating;
   final double? cost;
   final String currency;
+  final List<DatePhoto> photos;
 
   factory DateEntry.fromJson(Map<String, dynamic> j) => DateEntry(
     id: j['id'] as String,
@@ -114,6 +141,9 @@ class DateEntry {
     rating: j['rating'] as int?,
     cost: (j['cost'] as num?)?.toDouble(),
     currency: (j['currency'] ?? 'MXN') as String,
+    photos: ((j['photos'] as List?) ?? const [])
+        .map((e) => DatePhoto.fromJson((e as Map).cast<String, dynamic>()))
+        .toList(),
   );
 }
 

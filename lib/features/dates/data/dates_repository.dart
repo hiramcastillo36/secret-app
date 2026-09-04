@@ -74,6 +74,7 @@ class DatesRepository {
     double? cost,
     String? currency,
     List<String>? participantIds,
+    List<String>? mediaIds,
     String? idempotencyKey,
   }) async {
     try {
@@ -88,6 +89,7 @@ class DatesRepository {
           if (cost != null) 'cost': cost,
           if (currency != null) 'currency': currency,
           if (participantIds != null) 'participant_ids': participantIds,
+          if (mediaIds != null && mediaIds.isNotEmpty) 'media_ids': mediaIds,
         },
         options: Options(
           headers: {
@@ -124,6 +126,33 @@ class DatesRepository {
       return DateEntry.fromJson(
         (res.data!['date'] as Map).cast<String, dynamic>(),
       );
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// POST /dates/{id}/participation — the tagged person confirms they were
+  /// there or removes themselves; either way the streak is recalculated
+  /// server-side (a rejected tag drops the date from the streak count).
+  Future<DateEntry> respondParticipation(String id, {required bool confirm}) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/dates/$id/participation',
+        data: {'decision': confirm ? 'confirm' : 'reject'},
+      );
+      return DateEntry.fromJson(
+        (res.data!['date'] as Map).cast<String, dynamic>(),
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// DELETE /dates/{id}/photos/{photo_id} — removes one photo; the streak is
+  /// untouched (only the date itself and its `counts_for_streak` matter).
+  Future<void> deletePhoto(String dateId, String photoId) async {
+    try {
+      await _dio.delete<void>('/dates/$dateId/photos/$photoId');
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }

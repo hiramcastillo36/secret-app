@@ -10,6 +10,7 @@ import '../../../theme/tokens.dart';
 import '../../common/error_banner.dart';
 import '../../common/error_retry.dart';
 import '../../common/field_tile.dart';
+import '../../common/photo_grid_picker.dart';
 import '../../common/skeleton.dart';
 import '../../common/step_bar.dart';
 import '../../couple/application/couple.dart';
@@ -35,6 +36,8 @@ class _DateDetailsScreenState extends ConsumerState<DateDetailsScreen> {
   DateTime _when = DateTime.now();
   int _rating = 0;
   final Set<String> _tagged = {};
+  List<String> _mediaIds = [];
+  bool _uploadingPhotos = false;
   bool _submitting = false;
   String? _submitError;
   final String _idempotencyKey = DateTime.now().microsecondsSinceEpoch
@@ -109,6 +112,7 @@ class _DateDetailsScreenState extends ConsumerState<DateDetailsScreen> {
             cost: double.tryParse(_cost.text.replaceAll(',', '.')),
             currency: _currency,
             participantIds: everyone ? null : _tagged.toList(),
+            mediaIds: _mediaIds.isEmpty ? null : _mediaIds,
             idempotencyKey: _idempotencyKey,
           );
       if (!mounted) return;
@@ -323,6 +327,23 @@ class _DateDetailsScreenState extends ConsumerState<DateDetailsScreen> {
                               ),
                             ],
                           ),
+                          const SizedBox(height: RachaTokens.space4),
+                          Text(
+                            l10n.dateFieldPhotos,
+                            style: const TextStyle(
+                              fontSize: RachaType.callout,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: RachaTokens.space2),
+                          PhotoGridPicker(
+                            onReadyChanged: (ids) => _mediaIds = ids,
+                            onBusyChanged: (busy) {
+                              if (busy != _uploadingPhotos) {
+                                setState(() => _uploadingPhotos = busy);
+                              }
+                            },
+                          ),
                           if (_submitError != null) ...[
                             const SizedBox(height: RachaTokens.space3),
                             ErrorBanner(text: _submitError!),
@@ -343,14 +364,20 @@ class _DateDetailsScreenState extends ConsumerState<DateDetailsScreen> {
                     ),
                   ),
                   child: FilledButton(
-                    onPressed: _submitting ? null : () => _submit(memberIds),
+                    onPressed: (_submitting || _uploadingPhotos)
+                        ? null
+                        : () => _submit(memberIds),
                     child: _submitting
                         ? const SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(l10n.dateSave),
+                        : Text(
+                            _uploadingPhotos
+                                ? l10n.dateSavePhotosUploading
+                                : l10n.dateSave,
+                          ),
                   ),
                 ),
               ],
